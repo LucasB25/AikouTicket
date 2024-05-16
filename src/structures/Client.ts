@@ -40,7 +40,6 @@ export default class Bot extends Client {
         }
     }
 
-
     public embed(): EmbedBuilder {
         return new EmbedBuilder().setColor(this.config.color as any);
     }
