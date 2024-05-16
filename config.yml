@@ -13,7 +13,7 @@ ticketCategories:
         # Description explaining the purpose of this category
         menuDescription: 'This category is for general inquiries and questions.'
         # Emoji associated with this category (leave empty if none)
-        menuEmoji: ''
+        menuEmoji: '😀'
 
     # Category 2
     category2:

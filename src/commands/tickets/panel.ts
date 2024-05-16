@@ -34,12 +34,14 @@ export default class PanelCommand extends Command {
             options: [],
         });
     }
+
     async run(client: Bot, interaction: CommandInteraction): Promise<void> {
         await interaction.deferReply({ ephemeral: true });
 
         try {
             const configFile = fs.readFileSync('./config.yml', 'utf8');
             const config = YAML.parse(configFile);
+
             const panelEmbed = client
                 .embed()
                 .setColor(this.client.color)
@@ -52,14 +54,9 @@ export default class PanelCommand extends Command {
                 )
                 .setTimestamp();
 
-            // Extract ticketCategories from the config
             const ticketCategories = config.ticketCategories;
 
-            const options = [];
-
-            const customIds = Object.keys(ticketCategories);
-
-            for (const customId of customIds) {
+            const options = Object.keys(ticketCategories).map(customId => {
                 const category = ticketCategories[customId];
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(category.menuLabel)
@@ -70,8 +67,8 @@ export default class PanelCommand extends Command {
                     option.setEmoji(category.menuEmoji);
                 }
 
-                options.push(option);
-            }
+                return option;
+            });
 
             const selectMenu = new StringSelectMenuBuilder()
                 .setCustomId('categoryMenu')
@@ -84,9 +81,7 @@ export default class PanelCommand extends Command {
                 selectMenu
             );
 
-            await interaction.editReply({
-                content: 'Sending the panel in this channel...',
-            });
+            await interaction.editReply({ content: 'Sending the panel in this channel...' });
 
             await interaction.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
         } catch (error) {
