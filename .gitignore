@@ -1,0 +1,9 @@
+# Folders
+/.cache
+/.git
+/dist
+/node_modules
+.eslintcache
+.env
+package-lock.json
+yarn.lock

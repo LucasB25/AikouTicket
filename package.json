@@ -1,0 +1,59 @@
+{
+    "name": "AikouTicket",
+    "version": "0.5.0",
+    "description": "A simple AikouTicket bot for discord",
+    "type": "module",
+    "main": "dist/index.js",
+    "scripts": {
+        "start": "npm run build && node dist/index.js",
+        "clean:windows": "rmdir /s /q dist",
+        "clean:linux": "rm -rf dist",
+        "build": "tsc --project tsconfig.json",
+        "lint": "eslint . --cache --ext .js,.jsx,.ts,.tsx",
+        "lint:fix": "eslint . --fix --cache --ext .js,.jsx,.ts,.tsx",
+        "format": "prettier --check .",
+        "format:fix": "prettier --write ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/LucasB25/AikouTicket.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LucasB25/AikouTicket/issues"
+    },
+    "homepage": "https://github.com/LucasB25/AikouTicket#readme",
+    "devDependencies": {
+        "@types/node": "^20.12.12",
+        "@types/signale": "^1.4.7",
+        "@typescript-eslint/eslint-plugin": "^7.9.0",
+        "@typescript-eslint/parser": "^7.9.0",
+        "eslint": "^8.57.0",
+        "eslint-plugin-import": "^2.29.1",
+        "eslint-plugin-unicorn": "^53.0.0",
+        "prettier": "^3.2.5",
+        "ts-node": "^10.9.2"
+    },
+    "keywords": [
+        "discord",
+        "bot",
+        "support",
+        "tickets",
+        "typescript"
+    ],
+    "author": "LucasB25",
+    "license": "GPL-3.0",
+    "signale": {
+        "displayScope": true,
+        "displayBadge": true,
+        "displayDate": true,
+        "displayFilename": true,
+        "displayLabel": true,
+        "displayTimestamp": true,
+        "underlineLabel": true
+    },
+    "dependencies": {
+        "discord.js": "^14.15.2",
+        "dotenv": "^16.4.5",
+        "signale": "^1.4.0"
+    }
+}
