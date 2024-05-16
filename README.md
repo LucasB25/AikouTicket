@@ -67,7 +67,11 @@ CLIENT_ID= #Discord Bot Client ID
 Activity=/help
 ```
 
-5. Run the bot:
+5. Set up your environment variables:
+
+Open `config.yml` to configure the settings and messages to your liking, make sure to properly configure the ticket categories
+
+6. Run the bot:
 
 ```bash
 npm start

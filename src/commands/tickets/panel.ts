@@ -2,8 +2,12 @@ import {
     ActionRowBuilder,
     CommandInteraction,
     StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder
+    StringSelectMenuOptionBuilder,
 } from 'discord.js';
+import fs from 'node:fs';
+import YAML from 'yaml';
+const configFile = fs.readFileSync('./config.yml', 'utf8');
+const config = YAML.parse(configFile);
 
 import { Bot, Command } from '../../structures/index.js';
 
@@ -42,21 +46,13 @@ export default class Ping extends Command {
             .setDescription(
                 'To create a support ticket, please select one of the options below based on the assistance you require.'
             )
-            .setImage('https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&')
+            .setImage(
+                'https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&'
+            )
             .setTimestamp();
 
-        const ticketCategories = {
-            'category1': {
-                menuLabel: 'Category 1',
-                menuDescription: 'Description for Category 1',
-                menuEmoji: '',
-            },
-            'category2': {
-                menuLabel: 'Category 2',
-                menuDescription: 'Description for Category 2',
-                menuEmoji: '',
-            },
-        };
+        // Extract ticketCategories from the config
+        const ticketCategories = config.ticketCategories;
 
         const options = [];
 
@@ -83,12 +79,14 @@ export default class Ping extends Command {
             .setMaxValues(1)
             .addOptions(options);
 
-        const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+        const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+            selectMenu
+        );
 
         await interaction.editReply({
             content: 'Sending the panel in this channel...',
         });
 
-        await interaction.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus], });
+        await interaction.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
     }
 }

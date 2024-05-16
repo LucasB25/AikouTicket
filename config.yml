@@ -1,41 +1,34 @@
-TicketCategories:
-    - id: 1 # Unique ID for each category, ONLY USE NUMBERS (It is suggested to just increment this value by 1 each time)
-      name: 'report' # The name of the category, it will be in lowercase anyways
-      categoryID: ['111111111111111111'] # The IDs of the categories where those tickets will be created, for example ["000000000000000000", "111111111111111111"]
-      closedCategoryID: ['111111111111111111'] # The IDs of the categories where the closed tickets will go, for example ["000000000000000000", "111111111111111111"]
-      support_role_ids: ['000000000000000000', '111111111111111111'] # The IDs of the staff roles on your server that can access only this ticket category, for example ["000000000000000000", "111111111111111111"]
-      pingRoles: false # Enable or disable pinging roles when a ticket is opened in this category
-      ping_role_ids: [] # The IDs of the roles you want to ping when a ticket is opened in this category, for example ["000000000000000000", "111111111111111111"]
-      ghostPingRoles: false # Enable or disable ghost pinging the ping_role_ids when a ticket is opened, use either {support-roles} in textContent below or this option, avoid using both because then the support roles will receive 2 pings
-      textContent: '' # The text content that is sent alongside the embed, use {support-roles} for the support roles only if you enabled pingRoles above, you may also use {user} and {user.tag}
-      creatorRoles: [] # The IDs of the roles that can create tickets in this category, keep it empty to allow all roles to create tickets
-      buttonEmoji: '👮' # The emoji of the button, leave it empty "" to use no emojis
-      buttonLabel: 'Report a user' # The name of the button
-      buttonStyle: 'Success' # Options: "Primary" which is blurple, "Secondary" which is grey, "Success" which is green, "Danger" which is red and do NOT use "Link"
-      menuEmoji: '👮' # The emoji of the select menu option, leave it empty "" to use no emojis
-      menuLabel: 'Report a user' # The name of the select menu option
-      menuDescription: 'Click on this option to open a report user ticket!' # The description of the select menu option
-      embedTitle: 'Report Ticket' # The title of the embed
-      color: '#FFD700' # The color of embed in the opened ticket
-      description: 'Welcome {user} ({user.tag}) to your report ticket! Please be patient while a staff member responds to your report.' # The description of the embed in the created ticket, right above the questions fields, use {user} for the user such as @User and {user.tag} for the name of the user without it being mentioned such as User
-      ticketName: 'TICKETCOUNT' # Options are: USERNAME (will be called name-USERNAME such as report-ralphkb), TICKETCOUNT (will be called name-TICKETCOUNT such as "report-12348") or BOTH (will be called USERNAME-TICKETCOUNT such as "ralphkb-12348")
-      ticketTopic: 'Ticket Creator: {user} | Ticket Type: {type}' # The topic of the ticket channel
-      slowmode: '0' # The slowmode of the ticket channel in seconds, keep it 0 if you don't want a slowmode and do not use negative values
-      useCodeBlocks: false # Set this to true if you want to use code blocks to display the answers of the ticket category questions
-      modalTitle: 'User Report Format' # The title of the modal
-      questions: # Maximum number of questions is 5, you should at least keep 1 question since that information will always help you in any ticket
-          - label: 'What is your username?'
-            placeholder: 'Write your username'
-            style: 'Short' # Short or Paragraph
-            required: true # If this input is required or not, can be true or false
-            minLength: 3 # Set the minimum number of characters required for submission
-          - label: 'Reported username?'
-            placeholder: 'Write their username'
-            style: 'Short'
-            required: true
-            minLength: 3
-          - label: 'Why are you reporting them?'
-            placeholder: 'Explain with details'
-            style: 'Paragraph'
-            required: true
-            minLength: 50
+# ================================
+# Ticket Category Settings
+# ================================
+
+# Define different categories of tickets here.
+# Each category should have a unique identifier.
+
+ticketCategories:
+    # Category 1
+    category1:
+        # Label displayed in the select menu
+        menuLabel: 'Category 1'
+        # Description explaining the purpose of this category
+        menuDescription: 'This category is for general inquiries and questions.'
+        # Emoji associated with this category (leave empty if none)
+        menuEmoji: ''
+
+    # Category 2
+    category2:
+        # Label displayed in the select menu
+        menuLabel: 'Category 2'
+        # Description explaining the purpose of this category
+        menuDescription: 'Use this category for technical support and troubleshooting.'
+        # Emoji associated with this category (leave empty if none)
+        menuEmoji: ''
+
+    # Category 3
+    category3:
+        # Label displayed in the select menu
+        menuLabel: 'Category 3'
+        # Description explaining the purpose of this category
+        menuDescription: 'For billing-related inquiries and payment issues.'
+        # Emoji associated with this category (leave empty if none)
+        menuEmoji: ''
