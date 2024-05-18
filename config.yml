@@ -6,7 +6,7 @@
 menuPlaceholder: 'Select a category to open a ticket.'
 
 # Roles with access to ticket channels
-supportRole: ['1228777265136140288', '1228777265136140288']
+supportRoles: ['1228777265136140288']
 
 # ================================
 # Ticket Category Settings
