@@ -6,14 +6,15 @@
     "main": "dist/index.js",
     "scripts": {
         "start": "npm run build && node dist/index.js",
+        "build": "tsc --project tsconfig.json",
+        "prisma:generate": "npx prisma generate",
+        "prisma:migrate": "npx prisma migrate dev --name init",
         "clean:windows": "rmdir /s /q dist",
         "clean:linux": "rm -rf dist",
-        "build": "tsc --project tsconfig.json",
         "lint": "eslint . --cache --ext .js,.jsx,.ts,.tsx",
         "lint:fix": "eslint . --fix --cache --ext .js,.jsx,.ts,.tsx",
         "format": "prettier --check .",
-        "format:fix": "prettier --write .",
-        "prisma:generate": "npx prisma generate"
+        "format:fix": "prettier --write ."
     },
     "repository": {
         "type": "git",

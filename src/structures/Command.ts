@@ -49,7 +49,7 @@ export default class Command {
                 usage: 'No usage provided',
                 examples: ['No examples provided'],
             },
-            descriptionLocalizations = null,
+            descriptionLocalizations = {},
             cooldown = 3,
             permissions = {
                 dev: false,

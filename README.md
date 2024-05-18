@@ -65,13 +65,26 @@ or you can use the [.env.example](https://raw.githubusercontent.com/LucasB25/Aik
 TOKEN= #Discord Bot Token
 CLIENT_ID= #Discord Bot Client ID
 Activity=/help
+DATABASE_URL = "" # Your database url (If you want to use sqlite, then you can leave it blank.).
 ```
 
 5. Set up your environment variables:
 
 Open `config.yml` to configure the settings and messages to your liking, make sure to properly configure the ticket categories
 
-6. Run the bot:
+6. generate the prisma client
+
+```bash
+npm run prisma:generate
+```
+
+7. Run the migrations
+
+```bash
+npm run prisma:migrate
+```
+
+8. Run the bot:
 
 ```bash
 npm start

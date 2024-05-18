@@ -1,3 +1,13 @@
+# ==============================================
+# Ticket bot general settings
+# ==============================================
+
+# The placeholder of the select menu
+menuPlaceholder: 'Select a category to open a ticket.'
+
+# Roles with access to ticket channels
+supportRole: ['1228777265136140288', '1228777265136140288']
+
 # ================================
 # Ticket Category Settings
 # ================================
@@ -22,7 +32,7 @@ ticketCategories:
         # Description explaining the purpose of this category
         menuDescription: 'Use this category for technical support and troubleshooting.'
         # Emoji associated with this category (leave empty if none)
-        menuEmoji: ''
+        menuEmoji: '😀'
 
     # Category 3
     category3:
@@ -31,4 +41,4 @@ ticketCategories:
         # Description explaining the purpose of this category
         menuDescription: 'For billing-related inquiries and payment issues.'
         # Emoji associated with this category (leave empty if none)
-        menuEmoji: ''
+        menuEmoji: '😀'
