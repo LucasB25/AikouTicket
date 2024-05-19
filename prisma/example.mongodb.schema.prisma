@@ -18,8 +18,3 @@ model tickets {
   guildId               String      @id @map("_id")
   selectMenuOptions     String
 }
-
-model users {
-  userId                String      @id @map("_id")
-  activeTickets         Int
-}

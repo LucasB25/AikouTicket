@@ -1,6 +1,7 @@
 import {
     ActionRowBuilder,
     CommandInteraction,
+    EmbedBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
 } from 'discord.js';
@@ -38,10 +39,42 @@ export default class PanelCommand extends Command {
     async run(client: Bot, interaction: CommandInteraction): Promise<void> {
         await interaction.deferReply({ ephemeral: true });
 
-        const configFile = fs.readFileSync('./config.yml', 'utf8');
-        const config = YAML.parse(configFile);
+        let config;
+        try {
+            const configFile = fs.readFileSync('./config.yml', 'utf8');
+            config = YAML.parse(configFile);
+        } catch (error) {
+            console.error('Error reading or parsing config file:', error);
+            await interaction.editReply({
+                content:
+                    'There was an error loading the configuration. Please contact the administrator.',
+            });
+            return;
+        }
 
-        const panelEmbed = client
+        const panelEmbed = this.createPanelEmbed(client);
+        const selectMenu = this.createSelectMenu(config.ticketCategories, config.menuPlaceholder);
+
+        const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+            selectMenu
+        );
+
+        try {
+            await interaction.editReply({ content: 'Sending the panel in this channel...' });
+
+            await interaction.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
+
+            await this.saveTicketData(interaction.guild.id, selectMenu.options);
+        } catch (error) {
+            console.error('Error sending the panel or saving ticket data:', error);
+            await interaction.editReply({
+                content: 'There was an error sending the panel. Please contact the administrator.',
+            });
+        }
+    }
+
+    createPanelEmbed(client: Bot): EmbedBuilder {
+        return client
             .embed()
             .setColor(this.client.color)
             .setTitle('AikouTicket')
@@ -52,9 +85,9 @@ export default class PanelCommand extends Command {
                 'https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&'
             )
             .setTimestamp();
+    }
 
-        const ticketCategories = config.ticketCategories;
-
+    createSelectMenu(ticketCategories: any, placeholder: string): StringSelectMenuBuilder {
         const options = Object.keys(ticketCategories).map(customId => {
             const category = ticketCategories[customId];
             const option = new StringSelectMenuOptionBuilder()
@@ -69,28 +102,20 @@ export default class PanelCommand extends Command {
             return option;
         });
 
-        const selectMenu = new StringSelectMenuBuilder()
+        return new StringSelectMenuBuilder()
             .setCustomId('categoryMenu')
-            .setPlaceholder(config.menuPlaceholder)
+            .setPlaceholder(placeholder)
             .setMinValues(1)
             .setMaxValues(1)
             .addOptions(options);
+    }
 
-        const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-            selectMenu
-        );
-
-        await interaction.editReply({ content: 'Sending the panel in this channel...' });
-
-        await interaction.channel
-            .send({ embeds: [panelEmbed], components: [actionRowsMenus] })
-            .then(async () => {
-                await this.client.prisma.tickets.create({
-                    data: {
-                        guildId: interaction.guild.id,
-                        selectMenuOptions: JSON.stringify(options),
-                    },
-                });
-            });
+    async saveTicketData(guildId: string, options: any): Promise<void> {
+        await this.client.prisma.tickets.create({
+            data: {
+                guildId,
+                selectMenuOptions: JSON.stringify(options),
+            },
+        });
     }
 }
