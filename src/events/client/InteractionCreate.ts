@@ -39,11 +39,9 @@ export default class InteractionCreate extends Event {
         }
 
         if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
-            await interaction.deferReply({ ephemeral: true }).catch(() => {});
+            await interaction.deferReply().catch(() => { });
             try {
-                const configFile = await fs.readFile('./config.yml', 'utf8');
-                const config = YAML.parse(configFile);
-
+                const config = await this.readConfigFile();
                 const maxActiveTicketsPerUser = config.maxActiveTicketsPerUser;
 
                 const selectMenuOptions = await this.client.prisma.tickets.findUnique({
@@ -90,13 +88,14 @@ export default class InteractionCreate extends Event {
                                 content: `Ticket created: ${channel.toString()}`,
                             });
                         } else {
-                            await this.replyWithError(
-                                interaction,
-                                `Failed to create ticket channel.`
-                            );
+                            await interaction.editReply({
+                                content: `Failed to create ticket channel.`
+                            });
                         }
                     } else {
-                        await this.replyWithError(interaction, `Selected category is not valid.`);
+                        await interaction.editReply({
+                            content: `Selected category is not valid.`
+                        });
                     }
                 } else {
                     throw new Error('No select menu options found.');
@@ -109,19 +108,20 @@ export default class InteractionCreate extends Event {
                         'There was an error while executing this command!'
                     );
                 } else if (interaction.isStringSelectMenu()) {
-                    await this.replyWithError(interaction, `Failed to update the select menu.`);
+                    await interaction.editReply({
+                        content: `Failed to update the select menu.`
+                    });
                 }
             }
         }
     }
+
     private async createTicket(
         interaction: CommandInteraction,
         categoryLabel: string
     ): Promise<TextChannel | null> {
         try {
-            const configFile = await fs.readFile('./config.yml', 'utf8');
-            const config = YAML.parse(configFile);
-
+            const config = await this.readConfigFile();
             const supportRoles: string[] = config.supportRoles;
             const userName = interaction.user.username;
 
@@ -181,5 +181,10 @@ export default class InteractionCreate extends Event {
             content: message,
             ephemeral: true,
         });
+    }
+
+    private async readConfigFile(): Promise<any> {
+        const configFile = await fs.readFile('./config.yml', 'utf8');
+        return YAML.parse(configFile);
     }
 }
