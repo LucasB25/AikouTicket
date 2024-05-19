@@ -6,3 +6,4 @@
 .eslintcache
 yarn.lock
 /prisma/aikouticket.db
+/prisma/migrations
