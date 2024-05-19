@@ -8,6 +8,8 @@ menuPlaceholder: 'Select a category to open a ticket.'
 # Roles with access to ticket channels
 supportRoles: ['1228777265136140288']
 
+maxActiveTicketsPerUser: 3
+
 # ================================
 # Ticket Category Settings
 # ================================

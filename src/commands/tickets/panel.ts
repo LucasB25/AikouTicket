@@ -82,7 +82,8 @@ export default class PanelCommand extends Command {
 
         await interaction.editReply({ content: 'Sending the panel in this channel...' });
 
-        await interaction.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] })
+        await interaction.channel
+            .send({ embeds: [panelEmbed], components: [actionRowsMenus] })
             .then(async () => {
                 await this.client.prisma.tickets.create({
                     data: {

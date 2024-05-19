@@ -7,3 +7,4 @@
 .env
 package-lock.json
 yarn.lock
+/prisma/aikouticket.db

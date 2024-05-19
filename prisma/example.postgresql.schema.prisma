@@ -15,6 +15,11 @@ datasource db {
 }
 
 model tickets {
-  guildId    String      @id
+  guildId               String      @id
   selectMenuOptions     String
+}
+
+model users {
+  userId                String      @id
+  activeTickets         Int
 }
