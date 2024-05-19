@@ -13,7 +13,6 @@ import YAML from 'yaml';
 import { Bot, Event } from '../../structures/index.js';
 
 export default class InteractionCreate extends Event {
-
     constructor(client: Bot, file: string) {
         super(client, file, {
             name: 'interactionCreate',
@@ -33,16 +32,19 @@ export default class InteractionCreate extends Event {
             }
         } catch (error) {
             this.client.logger.error(error);
-            if (interaction instanceof CommandInteraction) {
-                await this.replyWithError(interaction, 'There was an error while executing this command!');
-            }
+            await this.replyWithError(
+                interaction,
+                'There was an error while executing this command!'
+            );
         }
 
         if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
-            await interaction.deferReply().catch(() => { });
+            await interaction.deferReply({ ephemeral: true }).catch(() => {});
             try {
                 const configFile = await fs.readFile('./config.yml', 'utf8');
                 const config = YAML.parse(configFile);
+
+                const maxActiveTicketsPerUser = config.maxActiveTicketsPerUser;
 
                 const selectMenuOptions = await this.client.prisma.tickets.findUnique({
                     where: {
@@ -60,7 +62,8 @@ export default class InteractionCreate extends Event {
                         .setMaxValues(1)
                         .addOptions(parsedOptions);
 
-                    const updatedActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+                    const updatedActionRow =
+                        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
                     await interaction.message.edit({ components: [updatedActionRow] });
 
@@ -68,37 +71,62 @@ export default class InteractionCreate extends Event {
                     const category = parsedOptions.find((opt: any) => opt.value === selectedOption);
 
                     if (category) {
+                        const userTickets = interaction.guild.channels.cache.filter(
+                            channel =>
+                                channel.type === ChannelType.GuildText &&
+                                channel.name.startsWith(`ticket-${interaction.user.username}`)
+                        );
+
+                        if (userTickets.size >= maxActiveTicketsPerUser) {
+                            await interaction.editReply({
+                                content: `You have reached the maximum limit of active tickets (${maxActiveTicketsPerUser}).`,
+                            });
+                            return;
+                        }
+
                         const channel = await this.createTicket(interaction, category.label);
                         if (channel) {
-                            await interaction.editReply({ content: `Ticket created: ${channel.toString()}` });
-
+                            await interaction.editReply({
+                                content: `Ticket created: ${channel.toString()}`,
+                            });
                         } else {
-                            await interaction.editReply({ content: `Failed to create ticket channel.` });
+                            await this.replyWithError(
+                                interaction,
+                                `Failed to create ticket channel.`
+                            );
                         }
                     } else {
-                        await interaction.editReply({ content: `Selected category is not valid.` });
+                        await this.replyWithError(interaction, `Selected category is not valid.`);
                     }
-
                 } else {
                     throw new Error('No select menu options found.');
                 }
             } catch (error) {
                 this.client.logger.error(error);
-                await interaction.editReply({ content: `Failed to update the select menu.` });
-
+                if (interaction instanceof CommandInteraction) {
+                    await this.replyWithError(
+                        interaction,
+                        'There was an error while executing this command!'
+                    );
+                } else if (interaction.isStringSelectMenu()) {
+                    await this.replyWithError(interaction, `Failed to update the select menu.`);
+                }
             }
         }
     }
-
-    private async createTicket(interaction: CommandInteraction, categoryLabel: string): Promise<TextChannel | null> {
+    private async createTicket(
+        interaction: CommandInteraction,
+        categoryLabel: string
+    ): Promise<TextChannel | null> {
         try {
             const configFile = await fs.readFile('./config.yml', 'utf8');
             const config = YAML.parse(configFile);
 
             const supportRoles: string[] = config.supportRoles;
+            const userName = interaction.user.username;
 
             const channelOptions: GuildChannelCreateOptions = {
-                name: `ticket-${categoryLabel}`,
+                name: `ticket-${userName}`,
                 type: ChannelType.GuildText,
                 topic: `Ticket for ${categoryLabel}`,
                 parent: config.ticketCategoryId,
@@ -133,6 +161,11 @@ export default class InteractionCreate extends Event {
             const channel = await interaction.guild.channels.create(channelOptions);
 
             if (channel instanceof TextChannel) {
+                channel.client.once('channelDelete', async deletedChannel => {
+                    if (deletedChannel.id === channel.id) {
+                        //
+                    }
+                });
                 return channel;
             } else {
                 throw new Error('Failed to create a text channel');
