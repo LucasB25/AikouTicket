@@ -1,16 +1,6 @@
-import {
-    ActionRowBuilder,
-    ChannelType,
-    CommandInteraction,
-    GuildChannelCreateOptions,
-    PermissionFlagsBits,
-    StringSelectMenuBuilder,
-    TextChannel,
-} from 'discord.js';
-import fs from 'node:fs/promises';
-import YAML from 'yaml';
+import { ActionRowBuilder, ChannelType, StringSelectMenuBuilder } from 'discord.js';
 
-import { Bot, Event } from '../../structures/index.js';
+import { Bot, Context, Event } from '../../structures/index.js';
 
 export default class InteractionCreate extends Event {
     constructor(client: Bot, file: string) {
@@ -22,26 +12,30 @@ export default class InteractionCreate extends Event {
     public async run(interaction: any): Promise<void> {
         try {
             if (interaction.isCommand()) {
-                const commandName = interaction.commandName;
-                const command = this.client.commands.get(commandName);
-                if (!command) {
-                    return;
+                const command = this.client.commands.get(interaction.commandName);
+                if (!command) return;
+                const ctx = new Context(interaction, interaction.options.data);
+                ctx.setArgs(interaction.options.data);
+                try {
+                    await command.run(this.client, ctx, ctx.args);
+                } catch (error) {
+                    this.client.logger.error(error);
+                    await interaction.reply({ content: `An error occurred: \`${error}\`` });
                 }
-
-                await command.run(this.client, interaction);
             }
         } catch (error) {
             this.client.logger.error(error);
-            await this.replyWithError(
-                interaction,
-                'There was an error while executing this command!'
-            );
+
+            await interaction.reply({
+                content: 'There was an error while executing this command!',
+                ephemeral: true,
+            });
         }
 
         if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
-            await interaction.deferReply().catch(() => { });
+            await interaction.deferReply().catch(() => {});
             try {
-                const config = await this.readConfigFile();
+                const config = await this.client.ticketmanager.readConfigFile();
                 const maxActiveTicketsPerUser = config.maxActiveTicketsPerUser;
 
                 const selectMenuOptions = await this.client.prisma.tickets.findUnique({
@@ -82,19 +76,23 @@ export default class InteractionCreate extends Event {
                             return;
                         }
 
-                        const channel = await this.createTicket(interaction, category.label);
+                        const channel = await this.client.ticketmanager.createTicket(
+                            interaction,
+                            category.label,
+                            this.client
+                        );
                         if (channel) {
                             await interaction.editReply({
                                 content: `Ticket created: ${channel.toString()}`,
                             });
                         } else {
                             await interaction.editReply({
-                                content: `Failed to create ticket channel.`
+                                content: `Failed to create ticket channel.`,
                             });
                         }
                     } else {
                         await interaction.editReply({
-                            content: `Selected category is not valid.`
+                            content: `Selected category is not valid.`,
                         });
                     }
                 } else {
@@ -102,89 +100,10 @@ export default class InteractionCreate extends Event {
                 }
             } catch (error) {
                 this.client.logger.error(error);
-                if (interaction instanceof CommandInteraction) {
-                    await this.replyWithError(
-                        interaction,
-                        'There was an error while executing this command!'
-                    );
-                } else if (interaction.isStringSelectMenu()) {
-                    await interaction.editReply({
-                        content: `Failed to update the select menu.`
-                    });
-                }
-            }
-        }
-    }
-
-    private async createTicket(
-        interaction: CommandInteraction,
-        categoryLabel: string
-    ): Promise<TextChannel | null> {
-        try {
-            const config = await this.readConfigFile();
-            const supportRoles: string[] = config.supportRoles;
-            const userName = interaction.user.username;
-
-            const channelOptions: GuildChannelCreateOptions = {
-                name: `ticket-${userName}`,
-                type: ChannelType.GuildText,
-                topic: `Ticket for ${categoryLabel}`,
-                parent: config.ticketCategoryId,
-                permissionOverwrites: [
-                    {
-                        id: interaction.guild.id,
-                        deny: ['ViewChannel'],
-                    },
-                    {
-                        id: interaction.user.id,
-                        allow: [
-                            'ViewChannel',
-                            'SendMessages',
-                            'ReadMessageHistory',
-                            'AttachFiles',
-                            'AddReactions',
-                        ],
-                    },
-                    ...supportRoles.map(roleId => ({
-                        id: roleId,
-                        allow: [
-                            PermissionFlagsBits.ViewChannel,
-                            PermissionFlagsBits.SendMessages,
-                            PermissionFlagsBits.ReadMessageHistory,
-                            PermissionFlagsBits.AttachFiles,
-                            PermissionFlagsBits.AddReactions,
-                        ],
-                    })),
-                ],
-            };
-
-            const channel = await interaction.guild.channels.create(channelOptions);
-
-            if (channel instanceof TextChannel) {
-                channel.client.once('channelDelete', async deletedChannel => {
-                    if (deletedChannel.id === channel.id) {
-                        //
-                    }
+                await interaction.editReply({
+                    content: 'Failed to update the select menu.',
                 });
-                return channel;
-            } else {
-                throw new Error('Failed to create a text channel');
             }
-        } catch (error) {
-            this.client.logger.error(error);
-            return null;
         }
-    }
-
-    private async replyWithError(interaction: CommandInteraction, message: string): Promise<void> {
-        await interaction[interaction.replied ? 'editReply' : 'reply']({
-            content: message,
-            ephemeral: true,
-        });
-    }
-
-    private async readConfigFile(): Promise<any> {
-        const configFile = await fs.readFile('./config.yml', 'utf8');
-        return YAML.parse(configFile);
     }
 }

@@ -1,6 +1,4 @@
-import { CommandInteraction } from 'discord.js';
-
-import { Bot, Command } from '../../structures/index.js';
+import { Bot, Command, Context } from '../../structures/index.js';
 
 export default class Invite extends Command {
     constructor(client: Bot) {
@@ -28,7 +26,7 @@ export default class Invite extends Command {
         });
     }
 
-    async run(client: Bot, interaction: CommandInteraction): Promise<void> {
+    async run(client: Bot, ctx: Context): Promise<void> {
         const embed = client
             .embed()
             .setColor(this.client.color)
@@ -36,6 +34,6 @@ export default class Invite extends Command {
                 `Invite me to your server with this link: [Invite](https://discord.com/oauth2/authorize?client_id=${client.user?.id}&scope=bot%20applications.commands&permissions=8)`
             );
 
-        await interaction.reply({ embeds: [embed] });
+        await ctx.sendMessage({ embeds: [embed] });
     }
 }

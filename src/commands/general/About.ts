@@ -1,6 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
-import { Bot, Command } from '../../structures/index.js';
+import { Bot, Command, Context } from '../../structures/index.js';
 
 export default class About extends Command {
     constructor(client: Bot) {
@@ -28,7 +28,7 @@ export default class About extends Command {
         });
     }
 
-    async run(client: Bot, interaction: CommandInteraction): Promise<void> {
+    async run(client: Bot, ctx: Context): Promise<void> {
         const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
                 .setLabel('Invite AikouTicket')
@@ -56,6 +56,6 @@ export default class About extends Command {
                 { name: 'Support', value: '[Here](https://discord.gg/AhUJa2kdAr)', inline: true }
             );
 
-        await interaction.reply({ embeds: [embed], components: [row] });
+        await ctx.sendMessage({ embeds: [embed], components: [row] });
     }
 }

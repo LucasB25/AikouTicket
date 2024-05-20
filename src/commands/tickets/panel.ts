@@ -1,6 +1,5 @@
 import {
     ActionRowBuilder,
-    CommandInteraction,
     EmbedBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
@@ -8,7 +7,7 @@ import {
 import fs from 'node:fs';
 import YAML from 'yaml';
 
-import { Bot, Command } from '../../structures/index.js';
+import { Bot, Command, Context } from '../../structures/index.js';
 
 export default class PanelCommand extends Command {
     constructor(client: Bot) {
@@ -36,16 +35,15 @@ export default class PanelCommand extends Command {
         });
     }
 
-    async run(client: Bot, interaction: CommandInteraction): Promise<void> {
-        await interaction.deferReply({ ephemeral: true });
-
+    async run(client: Bot, ctx: Context): Promise<void> {
+        await ctx.sendDeferMessage({ ephemeral: true });
         let config;
         try {
             const configFile = fs.readFileSync('./config.yml', 'utf8');
             config = YAML.parse(configFile);
         } catch (error) {
             console.error('Error reading or parsing config file:', error);
-            await interaction.editReply({
+            await ctx.editMessage({
                 content:
                     'There was an error loading the configuration. Please contact the administrator.',
             });
@@ -60,14 +58,14 @@ export default class PanelCommand extends Command {
         );
 
         try {
-            await interaction.editReply({ content: 'Sending the panel in this channel...' });
+            await ctx.editMessage({ content: 'Sending the panel in this channel...' });
 
-            await interaction.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
+            await ctx.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
 
-            await this.saveTicketData(interaction.guild.id, selectMenu.options);
+            await this.saveTicketData(ctx.guild.id, selectMenu.options);
         } catch (error) {
             console.error('Error sending the panel or saving ticket data:', error);
-            await interaction.editReply({
+            await ctx.editMessage({
                 content: 'There was an error sending the panel. Please contact the administrator.',
             });
         }
