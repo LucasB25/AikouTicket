@@ -25,7 +25,6 @@ export default class InteractionCreate extends Event {
             }
         } catch (error) {
             this.client.logger.error(error);
-
             await interaction.reply({
                 content: 'There was an error while executing this command!',
                 ephemeral: true,
@@ -39,25 +38,12 @@ export default class InteractionCreate extends Event {
                 const maxActiveTicketsPerUser = config.maxActiveTicketsPerUser;
 
                 const selectMenuOptions = await this.client.prisma.tickets.findUnique({
-                    where: {
-                        guildId: interaction.guild.id,
-                    },
+                    where: { guildId: interaction.guild.id },
                 });
 
-                if (selectMenuOptions && selectMenuOptions.selectMenuOptions) {
+                if (selectMenuOptions?.selectMenuOptions) {
                     const parsedOptions = JSON.parse(selectMenuOptions.selectMenuOptions);
-
-                    const selectMenu = new StringSelectMenuBuilder()
-                        .setCustomId('categoryMenu')
-                        .setPlaceholder(config.menuPlaceholder)
-                        .setMinValues(1)
-                        .setMaxValues(1)
-                        .addOptions(parsedOptions);
-
-                    const updatedActionRow =
-                        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
-
-                    await interaction.message.edit({ components: [updatedActionRow] });
+                    await this.updateSelectMenu(interaction, config.menuPlaceholder, parsedOptions);
 
                     const selectedOption = interaction.values[0];
                     const category = parsedOptions.find((opt: any) => opt.value === selectedOption);
@@ -81,29 +67,43 @@ export default class InteractionCreate extends Event {
                             category.label,
                             this.client
                         );
-                        if (channel) {
-                            await interaction.editReply({
-                                content: `Ticket created: ${channel.toString()}`,
-                            });
-                        } else {
-                            await interaction.editReply({
-                                content: `Failed to create ticket channel.`,
-                            });
-                        }
+                        await this.replyWithTicketCreationResult(interaction, channel);
                     } else {
-                        await interaction.editReply({
-                            content: `Selected category is not valid.`,
-                        });
+                        await interaction.editReply({ content: `Selected category is not valid.` });
                     }
                 } else {
                     throw new Error('No select menu options found.');
                 }
             } catch (error) {
                 this.client.logger.error(error);
-                await interaction.editReply({
-                    content: 'Failed to update the select menu.',
-                });
+                await interaction.editReply({ content: 'Failed to update the select menu.' });
             }
+        }
+    }
+
+    private async updateSelectMenu(
+        interaction: any,
+        placeholder: string,
+        options: any
+    ): Promise<void> {
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('categoryMenu')
+            .setPlaceholder(placeholder)
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions(options);
+
+        const updatedActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+            selectMenu
+        );
+        await interaction.message.edit({ components: [updatedActionRow] });
+    }
+
+    private async replyWithTicketCreationResult(interaction: any, channel: any): Promise<void> {
+        if (channel) {
+            await interaction.editReply({ content: `Ticket created: ${channel.toString()}` });
+        } else {
+            await interaction.editReply({ content: `Failed to create ticket channel.` });
         }
     }
 }
