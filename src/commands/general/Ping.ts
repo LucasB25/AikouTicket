@@ -8,12 +8,12 @@ export default class Ping extends Command {
                 fr: 'ping',
             },
             description: {
-                content: '🏓 | Get the bot latency',
+                content: 'Get the bot latency',
                 usage: 'ping',
                 examples: ['ping'],
             },
             descriptionLocalizations: {
-                fr: '🏓 | Obtiens la latence du bot.',
+                fr: 'Obtiens la latence du bot.',
             },
             category: 'general',
             permissions: {

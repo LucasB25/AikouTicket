@@ -10,12 +10,12 @@ export default class About extends Command {
                 fr: 'à-propos',
             },
             description: {
-                content: '📨 | Shows information about the bot',
+                content: 'Shows information about the bot',
                 usage: 'about',
                 examples: ['about'],
             },
             descriptionLocalizations: {
-                fr: '📨 | Affiche des informations sur le bot',
+                fr: 'Affiche des informations sur le bot',
             },
             category: 'general',
             permissions: {
@@ -31,7 +31,7 @@ export default class About extends Command {
     async run(client: Bot, ctx: Context): Promise<void> {
         const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
-                .setLabel('Invite AikouTicket')
+                .setLabel(`Invite ${this.client.user.username}`)
                 .setURL(
                     `https://discord.com/oauth2/authorize?client_id=${this.client.user?.id}&scope=bot%20applications.commands&permissions=8`
                 )

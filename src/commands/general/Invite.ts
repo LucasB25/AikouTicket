@@ -8,12 +8,12 @@ export default class Invite extends Command {
                 fr: 'invite',
             },
             description: {
-                content: '📨 | Get the bot invite link',
+                content: 'Get the bot invite link',
                 usage: 'invite',
                 examples: ['invite'],
             },
             descriptionLocalizations: {
-                fr: '📨 | Afficher le lien d\'invitation.',
+                fr: 'Afficher le lien d\'invitation.',
             },
             category: 'general',
             permissions: {

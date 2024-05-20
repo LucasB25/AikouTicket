@@ -24,7 +24,7 @@ export default class PanelCommand extends Command {
             descriptionLocalizations: {
                 fr: 'Envoyez le panneau de ticket dans la chaîne.',
             },
-            category: 'general',
+            category: 'ticket',
             permissions: {
                 dev: false,
                 client: ['SendMessages', 'ViewChannel', 'EmbedLinks'],

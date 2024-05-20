@@ -20,7 +20,10 @@ export default class InteractionCreate extends Event {
                     await command.run(this.client, ctx, ctx.args);
                 } catch (error) {
                     this.client.logger.error(error);
-                    await interaction.reply({ content: `An error occurred: \`${error}\`` });
+                    await interaction.reply({
+                        content: `An error occurred: \`${error}\``,
+                        ephemeral: true,
+                    });
                 }
             }
         } catch (error) {
@@ -32,7 +35,7 @@ export default class InteractionCreate extends Event {
         }
 
         if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
-            await interaction.deferReply().catch(() => {});
+            await interaction.deferReply({ ephemeral: true }).catch(() => {});
             try {
                 const config = await this.client.ticketmanager.readConfigFile();
                 const maxActiveTicketsPerUser = config.maxActiveTicketsPerUser;
@@ -64,19 +67,23 @@ export default class InteractionCreate extends Event {
 
                         const channel = await this.client.ticketmanager.createTicket(
                             interaction,
-                            category.label,
+                            category.value,
                             this.client
                         );
                         await this.replyWithTicketCreationResult(interaction, channel);
                     } else {
-                        await interaction.editReply({ content: `Selected category is not valid.` });
+                        await interaction.editReply({
+                            content: `Selected category is not valid.`,
+                        });
                     }
                 } else {
                     throw new Error('No select menu options found.');
                 }
             } catch (error) {
                 this.client.logger.error(error);
-                await interaction.editReply({ content: 'Failed to update the select menu.' });
+                await interaction.editReply({
+                    content: 'Failed to update the select menu.',
+                });
             }
         }
     }
@@ -101,9 +108,13 @@ export default class InteractionCreate extends Event {
 
     private async replyWithTicketCreationResult(interaction: any, channel: any): Promise<void> {
         if (channel) {
-            await interaction.editReply({ content: `Ticket created: ${channel.toString()}` });
+            await interaction.editReply({
+                content: `Ticket created: ${channel.toString()}`,
+            });
         } else {
-            await interaction.editReply({ content: `Failed to create ticket channel.` });
+            await interaction.editReply({
+                content: `Failed to create ticket channel.`,
+            });
         }
     }
 }

@@ -1,6 +1,7 @@
 import {
     ChannelType,
     CommandInteraction,
+    EmbedBuilder,
     GuildChannelCreateOptions,
     PermissionFlagsBits,
     Snowflake,
@@ -14,8 +15,16 @@ import { Bot } from '../structures/index.js';
 interface Config {
     supportRoles: Snowflake[];
     ticketCategoryId: Snowflake;
-    maxActiveTicketsPerUser: Snowflake;
-    menuPlaceholder: Snowflake;
+    maxActiveTicketsPerUser: number;
+    menuPlaceholder: string;
+    ticketCategories: {
+        [key: string]: {
+            menuLabel: string;
+            menuDescription: string;
+            menuEmoji: string;
+            embedDescription: string;
+        };
+    };
 }
 
 export class TicketManager {
@@ -25,9 +34,19 @@ export class TicketManager {
         client: Bot
     ): Promise<TextChannel | null> {
         try {
+            if (!categoryLabel) {
+                throw new Error('Category label is undefined.');
+            }
+
             const config = await this.readConfigFile();
-            const { supportRoles, ticketCategoryId } = config;
+            const { supportRoles, ticketCategoryId, ticketCategories } = config;
             const userName = interaction.user.username;
+
+            if (!(categoryLabel.toLowerCase() in ticketCategories)) {
+                throw new Error(`Category "${categoryLabel}" not found in config.`);
+            }
+
+            const categoryConfig = ticketCategories[categoryLabel.toLowerCase()];
 
             const channelOptions: GuildChannelCreateOptions = {
                 name: `ticket-${userName}`,
@@ -37,7 +56,7 @@ export class TicketManager {
                 permissionOverwrites: [
                     {
                         id: interaction.guild.id,
-                        deny: ['ViewChannel'],
+                        deny: ['ViewChannel', 'SendMessages'],
                     },
                     {
                         id: interaction.user.id,
@@ -46,7 +65,7 @@ export class TicketManager {
                             'SendMessages',
                             'ReadMessageHistory',
                             'AttachFiles',
-                            'AddReactions',
+                            'EmbedLinks',
                         ],
                     },
                     ...supportRoles.map(roleId => ({
@@ -56,7 +75,7 @@ export class TicketManager {
                             PermissionFlagsBits.SendMessages,
                             PermissionFlagsBits.ReadMessageHistory,
                             PermissionFlagsBits.AttachFiles,
-                            PermissionFlagsBits.AddReactions,
+                            PermissionFlagsBits.EmbedLinks,
                         ],
                     })),
                 ],
@@ -67,6 +86,23 @@ export class TicketManager {
             if (!(channel instanceof TextChannel)) {
                 throw new Error('Failed to create a text channel');
             }
+
+            const embed = TicketManager.createTicketEmbed(
+                client,
+                interaction,
+                userName,
+                categoryLabel,
+                categoryConfig.embedDescription
+            );
+
+            const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
+            const messageContent = `Ticket created! Support roles: ${roleMentions}`;
+
+            const message = await channel.send({ content: messageContent, embeds: [embed] });
+
+            await message.pin().then(() => {
+                message.channel.bulkDelete(1);
+            });
 
             channel.client.once('channelDelete', async deletedChannel => {
                 if (deletedChannel.id === channel.id) {
@@ -81,12 +117,35 @@ export class TicketManager {
         }
     }
 
+    public static createTicketEmbed(
+        client: Bot,
+        interaction: CommandInteraction,
+        userName: string,
+        categoryLabel: string,
+        embedDescription: string
+    ): EmbedBuilder {
+        return client
+            .embed()
+            .setThumbnail(`${interaction.user.avatarURL({ extension: 'png', size: 1024 })}`)
+            .setAuthor({
+                name: categoryLabel,
+                iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }),
+            })
+            .setDescription(`${embedDescription}`)
+            .setColor('#00ff00')
+            .setFooter({
+                text: userName,
+                iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }),
+            })
+            .setTimestamp();
+    }
+
     public static async readConfigFile(): Promise<Config> {
         try {
             const configFile = await fs.readFile('./config.yml', 'utf8');
             return YAML.parse(configFile) as Config;
         } catch (error) {
-            throw new Error(`Failed to read config file: ${error.message}`);
+            throw new Error(`Failed to read config file: ${error.message} `);
         }
     }
 }

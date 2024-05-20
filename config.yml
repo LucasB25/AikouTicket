@@ -2,14 +2,19 @@
 # Ticket bot general settings
 # ==============================================
 
-# The placeholder of the select menu
+# The placeholder text for the select menu
 menuPlaceholder: 'Select a category to open a ticket.'
 
 # Roles with access to ticket channels
-supportRoles: ['1228777265136140288']
+supportRoles:
+    - '1228777265136140288'  # Support role ID 1
+    - '1220724757671182345'  # Support role ID 2
 
 # Maximum number of active tickets allowed per user
-maxActiveTicketsPerUser: 3
+maxActiveTicketsPerUser: 1
+
+# ID of the channel where ticket logs will be sent
+logChannelId: '1218191277384798341'
 
 # ================================
 # Ticket Category Settings
@@ -27,6 +32,8 @@ ticketCategories:
         menuDescription: 'This category is for general inquiries and questions.'
         # Emoji associated with this category (leave empty if none)
         menuEmoji: '😀'
+        # Embed description for this category
+        embedDescription: 'Welcome to Category 1! Feel free to ask any general questions or make inquiries here.'
 
     # Category 2
     category2:
@@ -35,7 +42,9 @@ ticketCategories:
         # Description explaining the purpose of this category
         menuDescription: 'Use this category for technical support and troubleshooting.'
         # Emoji associated with this category (leave empty if none)
-        menuEmoji: '😀'
+        menuEmoji: '🔧'
+        # Embed description for this category
+        embedDescription: 'Welcome to Category 2! Need technical support or facing any issues? Ask here.'
 
     # Category 3
     category3:
@@ -44,4 +53,6 @@ ticketCategories:
         # Description explaining the purpose of this category
         menuDescription: 'For billing-related inquiries and payment issues.'
         # Emoji associated with this category (leave empty if none)
-        menuEmoji: '😀'
+        menuEmoji: '💳'
+        # Embed description for this category
+        embedDescription: 'Welcome to Category 3! Have any questions or issues regarding billing or payments? Let us know.'
