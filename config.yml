@@ -7,11 +7,13 @@ menuPlaceholder: 'Select a category to open a ticket.'
 
 # Roles with access to ticket channels
 supportRoles:
-    - '1228777265136140288'  # Support role ID 1
-    - '1220724757671182345'  # Support role ID 2
+    - '1228777265136140288' # Support role ID 1
+    - '1220724757671182345' # Support role ID 2
 
 # Maximum number of active tickets allowed per user
 maxActiveTicketsPerUser: 1
+
+ticketInactivityThreshold: 24
 
 # ID of the channel where ticket logs will be sent
 logChannelId: '1218191277384798341'

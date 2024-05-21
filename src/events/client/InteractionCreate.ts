@@ -109,7 +109,7 @@ export default class InteractionCreate extends Event {
     private async replyWithTicketCreationResult(interaction: any, channel: any): Promise<void> {
         if (channel) {
             await interaction.editReply({
-                content: `Ticket created: ${channel.toString()}`,
+                content: `Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`,
             });
         } else {
             await interaction.editReply({

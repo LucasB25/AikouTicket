@@ -1,4 +1,7 @@
 import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     ChannelType,
     CommandInteraction,
     EmbedBuilder,
@@ -10,6 +13,7 @@ import {
 import { promises as fs } from 'node:fs';
 import YAML from 'yaml';
 
+import { LogsManager } from './LogsManager.js';
 import { Bot } from '../structures/index.js';
 
 interface Config {
@@ -51,7 +55,7 @@ export class TicketManager {
             const channelOptions: GuildChannelCreateOptions = {
                 name: `ticket-${userName}`,
                 type: ChannelType.GuildText,
-                topic: `Ticket for ${categoryLabel}`,
+                topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
                 parent: ticketCategoryId,
                 permissionOverwrites: [
                     {
@@ -95,18 +99,53 @@ export class TicketManager {
                 categoryConfig.embedDescription
             );
 
-            const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
-            const messageContent = `Ticket created! Support roles: ${roleMentions}`;
+            const closeButton = new ButtonBuilder()
+                .setCustomId('close-ticket')
+                .setLabel('Close')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('🔒');
 
-            const message = await channel.send({ content: messageContent, embeds: [embed] });
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
+
+            const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
+            const messageContent = `${roleMentions}`;
+
+            const message = await channel.send({
+                content: messageContent,
+                embeds: [embed],
+                components: [row],
+            });
 
             await message.pin().then(() => {
                 message.channel.bulkDelete(1);
             });
 
+            // Log ticket creation
+            await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
+
+            client.on('interactionCreate', async interaction => {
+                if (!interaction.isButton()) return;
+                if (interaction.customId === 'close-ticket') {
+                    await interaction.reply({
+                        content: 'Ticket will be closed in 10 seconds.',
+                        ephemeral: false,
+                    });
+                    setTimeout(async () => {
+                        // await LogsManager.logTicketDeletion(
+                        //     interaction,
+                        //     client,
+                        //     interaction.user.username,
+                        //     categoryLabel,
+                        //     channel
+                        // );
+                        await channel.delete('Ticket closed by user.');
+                    }, 10000); // 10000 ms = 10 seconds
+                }
+            });
+
             channel.client.once('channelDelete', async deletedChannel => {
                 if (deletedChannel.id === channel.id) {
-                    //
+                    // Handle channel deletion if necessary
                 }
             });
 
