@@ -1,6 +1,7 @@
 import {
     ActionRowBuilder,
     ButtonBuilder,
+    ButtonInteraction,
     ButtonStyle,
     ChannelType,
     CommandInteraction,
@@ -33,7 +34,7 @@ interface Config {
 
 export class TicketManager {
     public static async createTicket(
-        interaction: CommandInteraction,
+        interaction: CommandInteraction | ButtonInteraction,
         categoryLabel: string,
         client: Bot
     ): Promise<TextChannel | null> {
@@ -58,10 +59,7 @@ export class TicketManager {
                 topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
                 parent: ticketCategoryId,
                 permissionOverwrites: [
-                    {
-                        id: interaction.guild.id,
-                        deny: ['ViewChannel', 'SendMessages'],
-                    },
+                    { id: interaction.guild.id, deny: ['ViewChannel', 'SendMessages'] },
                     {
                         id: interaction.user.id,
                         allow: [
@@ -120,28 +118,7 @@ export class TicketManager {
                 message.channel.bulkDelete(1);
             });
 
-            // Log ticket creation
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
-
-            client.on('interactionCreate', async interaction => {
-                if (!interaction.isButton()) return;
-                if (interaction.customId === 'close-ticket') {
-                    await interaction.reply({
-                        content: 'Ticket will be closed in 10 seconds.',
-                        ephemeral: false,
-                    });
-                    setTimeout(async () => {
-                        // await LogsManager.logTicketDeletion(
-                        //     interaction,
-                        //     client,
-                        //     interaction.user.username,
-                        //     categoryLabel,
-                        //     channel
-                        // );
-                        await channel.delete('Ticket closed by user.');
-                    }, 10000); // 10000 ms = 10 seconds
-                }
-            });
 
             channel.client.once('channelDelete', async deletedChannel => {
                 if (deletedChannel.id === channel.id) {
@@ -158,7 +135,7 @@ export class TicketManager {
 
     public static createTicketEmbed(
         client: Bot,
-        interaction: CommandInteraction,
+        interaction: CommandInteraction | ButtonInteraction,
         userName: string,
         categoryLabel: string,
         embedDescription: string

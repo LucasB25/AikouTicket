@@ -16,7 +16,6 @@ import { fileURLToPath } from 'node:url';
 
 import Logger from './Logger.js';
 import config from '../config.js';
-import { TicketManager } from '../utils/TicketManager.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,7 +25,6 @@ export default class Bot extends Client {
     public readonly prisma: PrismaClient = new PrismaClient();
     public readonly color = config.color;
     public commands = new Collection<string, any>();
-    public ticketmanager = TicketManager;
     private data: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
     constructor(options: ClientOptions) {

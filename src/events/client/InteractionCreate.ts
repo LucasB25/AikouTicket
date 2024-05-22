@@ -1,6 +1,8 @@
-import { ActionRowBuilder, ChannelType, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, ChannelType, StringSelectMenuBuilder, TextChannel } from 'discord.js';
 
 import { Bot, Context, Event } from '../../structures/index.js';
+import { LogsManager } from '../../utils/LogsManager.js';
+import { TicketManager } from '../../utils/TicketManager.js';
 
 export default class InteractionCreate extends Event {
     constructor(client: Bot, file: string) {
@@ -35,9 +37,9 @@ export default class InteractionCreate extends Event {
         }
 
         if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
-            await interaction.deferReply({ ephemeral: true }).catch(() => {});
+            await interaction.deferReply({ ephemeral: true }).catch(() => { });
             try {
-                const config = await this.client.ticketmanager.readConfigFile();
+                const config = await TicketManager.readConfigFile();
                 const maxActiveTicketsPerUser = config.maxActiveTicketsPerUser;
 
                 const selectMenuOptions = await this.client.prisma.tickets.findUnique({
@@ -65,7 +67,7 @@ export default class InteractionCreate extends Event {
                             return;
                         }
 
-                        const channel = await this.client.ticketmanager.createTicket(
+                        const channel = await TicketManager.createTicket(
                             interaction,
                             category.value,
                             this.client
@@ -85,6 +87,26 @@ export default class InteractionCreate extends Event {
                     content: 'Failed to update the select menu.',
                 });
             }
+        }
+
+        if (interaction.isButton() && interaction.customId === 'close-ticket') {
+
+            const channel = interaction.channel as TextChannel;
+
+            await interaction.reply({
+                content: 'Ticket will be closed in 10 seconds.',
+                ephemeral: false,
+            });
+            setTimeout(async () => {
+                await LogsManager.logTicketDeletion(
+                    interaction,
+                    this.client,
+                    interaction.user.username,
+                    'Unknown',
+                    channel
+                );
+                await channel.delete('Ticket closed by user.');
+            }, 10000);
         }
     }
 

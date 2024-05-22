@@ -1,4 +1,11 @@
-import { CommandInteraction, EmbedBuilder, GuildChannel, Snowflake, TextChannel } from 'discord.js';
+import {
+    ButtonInteraction,
+    CommandInteraction,
+    EmbedBuilder,
+    GuildChannel,
+    Snowflake,
+    TextChannel,
+} from 'discord.js';
 import { promises as fs } from 'node:fs';
 import YAML from 'yaml';
 
@@ -10,7 +17,7 @@ interface Config {
 
 export class LogsManager {
     public static async logTicketCreation(
-        interaction: CommandInteraction,
+        interaction: CommandInteraction | ButtonInteraction,
         categoryLabel: string,
         client: Bot,
         ticketChannel: GuildChannel
@@ -37,7 +44,7 @@ export class LogsManager {
     }
 
     public static async logTicketDeletion(
-        interaction: CommandInteraction,
+        interaction: CommandInteraction | ButtonInteraction,
         client: Bot,
         userName: string,
         categoryLabel: string,
@@ -65,11 +72,11 @@ export class LogsManager {
     }
 
     private static createLogEmbed(
-        interaction: CommandInteraction,
+        interaction: CommandInteraction | ButtonInteraction,
         userName: string,
         color: string,
         author: string,
-        description: string,
+        description: string
     ): EmbedBuilder {
         return new EmbedBuilder()
             .setThumbnail(interaction.user.avatarURL({ extension: 'png', size: 1024 }) ?? '')
