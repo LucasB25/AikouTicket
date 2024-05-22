@@ -16,7 +16,7 @@ maxActiveTicketsPerUser: 1
 ticketInactivityThreshold: 24
 
 # ID of the channel where ticket logs will be sent
-logChannelId: '1218191277384798341'
+logChannelId: '1242873167702265927'
 
 # ================================
 # Ticket Category Settings

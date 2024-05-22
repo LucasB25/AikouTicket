@@ -52,59 +52,23 @@ export class TicketManager {
             }
 
             const categoryConfig = ticketCategories[categoryLabel.toLowerCase()];
-
-            const channelOptions: GuildChannelCreateOptions = {
-                name: `ticket-${userName}`,
-                type: ChannelType.GuildText,
-                topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
-                parent: ticketCategoryId,
-                permissionOverwrites: [
-                    { id: interaction.guild.id, deny: ['ViewChannel', 'SendMessages'] },
-                    {
-                        id: interaction.user.id,
-                        allow: [
-                            'ViewChannel',
-                            'SendMessages',
-                            'ReadMessageHistory',
-                            'AttachFiles',
-                            'EmbedLinks',
-                        ],
-                    },
-                    ...supportRoles.map(roleId => ({
-                        id: roleId,
-                        allow: [
-                            PermissionFlagsBits.ViewChannel,
-                            PermissionFlagsBits.SendMessages,
-                            PermissionFlagsBits.ReadMessageHistory,
-                            PermissionFlagsBits.AttachFiles,
-                            PermissionFlagsBits.EmbedLinks,
-                        ],
-                    })),
-                ],
-            };
-
-            const channel = await interaction.guild.channels.create(channelOptions);
-
-            if (!(channel instanceof TextChannel)) {
-                throw new Error('Failed to create a text channel');
-            }
-
-            const embed = TicketManager.createTicketEmbed(
+            const channel = await this.createChannel(
+                interaction,
+                userName,
+                categoryLabel,
+                supportRoles,
+                ticketCategoryId
+            );
+            const embed = this.createTicketEmbed(
                 client,
                 interaction,
                 userName,
                 categoryLabel,
                 categoryConfig.embedDescription
             );
-
-            const closeButton = new ButtonBuilder()
-                .setCustomId('close-ticket')
-                .setLabel('Close')
-                .setStyle(ButtonStyle.Danger)
-                .setEmoji('🔒');
+            const closeButton = this.createCloseButton();
 
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
-
             const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
             const messageContent = `${roleMentions}`;
 
@@ -120,17 +84,65 @@ export class TicketManager {
 
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
 
-            channel.client.once('channelDelete', async deletedChannel => {
-                if (deletedChannel.id === channel.id) {
-                    // Handle channel deletion if necessary
-                }
-            });
-
             return channel;
         } catch (error) {
             client.logger.error(`Failed to create ticket: ${error.message}`);
             return null;
         }
+    }
+
+    private static async createChannel(
+        interaction: CommandInteraction | ButtonInteraction,
+        userName: string,
+        categoryLabel: string,
+        supportRoles: Snowflake[],
+        ticketCategoryId: Snowflake
+    ): Promise<TextChannel> {
+        const channelOptions: GuildChannelCreateOptions = {
+            name: `ticket-${userName}`,
+            type: ChannelType.GuildText,
+            topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
+            parent: ticketCategoryId,
+            permissionOverwrites: [
+                { id: interaction.guild.id, deny: ['ViewChannel', 'SendMessages'] },
+                {
+                    id: interaction.user.id,
+                    allow: [
+                        'ViewChannel',
+                        'SendMessages',
+                        'ReadMessageHistory',
+                        'AttachFiles',
+                        'EmbedLinks',
+                    ],
+                },
+                ...supportRoles.map(roleId => ({
+                    id: roleId,
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.ReadMessageHistory,
+                        PermissionFlagsBits.AttachFiles,
+                        PermissionFlagsBits.EmbedLinks,
+                    ],
+                })),
+            ],
+        };
+
+        const channel = await interaction.guild.channels.create(channelOptions);
+
+        if (!(channel instanceof TextChannel)) {
+            throw new Error('Failed to create a text channel');
+        }
+
+        return channel;
+    }
+
+    private static createCloseButton(): ButtonBuilder {
+        return new ButtonBuilder()
+            .setCustomId('close-ticket')
+            .setLabel('Close')
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji('🔒');
     }
 
     public static createTicketEmbed(

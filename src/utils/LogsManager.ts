@@ -22,23 +22,13 @@ export class LogsManager {
         client: Bot,
         ticketChannel: GuildChannel
     ): Promise<void> {
-        const config = await this.readConfigFile();
-        const logChannelId = config.logChannelId;
-        const logChannel = (await client.channels.fetch(logChannelId)) as TextChannel;
-
-        if (!logChannel) {
-            throw new Error('Log channel not found');
-        }
-
-        const embedColor = '#2FF200';
-        const embedAuthor = `Ticket Logs | Ticket Created`;
-        const embedDescription = `- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`;
+        const logChannel = await this.getLogChannel(client);
         const embed = this.createLogEmbed(
             interaction,
             interaction.user.username,
-            embedColor,
-            embedAuthor,
-            embedDescription
+            '#2FF200',
+            `Ticket Logs | Ticket Created`,
+            `- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`
         );
         await logChannel.send({ embeds: [embed] });
     }
@@ -50,23 +40,13 @@ export class LogsManager {
         categoryLabel: string,
         ticketChannel: GuildChannel
     ): Promise<void> {
-        const config = await this.readConfigFile();
-        const logChannelId = config.logChannelId;
-        const logChannel = (await client.channels.fetch(logChannelId)) as TextChannel;
-
-        if (!logChannel) {
-            throw new Error('Log channel not found');
-        }
-
-        const embedColor = '#FF2400';
-        const embedAuthor = `Ticket Logs | Ticket Closed`;
-        const embedDescription = `- **Closed By:** \n> ${interaction.user.username}\n\n- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`;
+        const logChannel = await this.getLogChannel(client);
         const embed = this.createLogEmbed(
             interaction,
             userName,
-            embedColor,
-            embedAuthor,
-            embedDescription
+            '#FF2400',
+            `Ticket Logs | Ticket Closed`,
+            `- **Closed By:** \n> ${interaction.user.username}\n\n- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`
         );
         await logChannel.send({ embeds: [embed] });
     }
@@ -91,6 +71,18 @@ export class LogsManager {
                 iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }) ?? '',
             })
             .setTimestamp();
+    }
+
+    private static async getLogChannel(client: Bot): Promise<TextChannel> {
+        const config = await this.readConfigFile();
+        const logChannelId = config.logChannelId;
+        const logChannel = (await client.channels.fetch(logChannelId)) as TextChannel;
+
+        if (!logChannel) {
+            throw new Error('Log channel not found');
+        }
+
+        return logChannel;
     }
 
     public static async readConfigFile(): Promise<Config> {
