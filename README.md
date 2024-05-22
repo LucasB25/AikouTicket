@@ -75,7 +75,7 @@ Open `config.yml` to configure the settings and messages to your liking, make su
 6. generate the prisma client
 
 ```bash
-npm run prisma:generate
+npm run prisma:push
 ```
 
 7. Run the migrations
