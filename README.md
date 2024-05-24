@@ -78,7 +78,7 @@ Open `config.yml` to configure the settings and messages to your liking, make su
 npm run prisma:push
 ```
 
-7. Run the migrations
+7. Run the migrations (Only if you want to migrate your database)
 
 ```bash
 npm run prisma:migrate

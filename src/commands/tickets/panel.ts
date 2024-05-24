@@ -109,11 +109,6 @@ export default class PanelCommand extends Command {
     }
 
     async saveTicketData(guildId: string, options: any): Promise<void> {
-        await this.client.prisma.tickets.create({
-            data: {
-                guildId,
-                selectMenuOptions: JSON.stringify(options),
-            },
-        });
+        await this.client.db.saveTicketData(guildId, options);
     }
 }

@@ -10,14 +10,14 @@ menuPlaceholder: 'Select a category to open a ticket.'
 
 # Roles with access to ticket channels
 supportRoles:
-    - '1228777265136140288' # Support role ID 1
-    - '1220724757671182345' # Support role ID 2
+    - '111111111111111111' # Support role ID 1
+    - '111111111111111111' # Support role ID 2
 
 # ID of the channel where ticket logs will be sent
-logChannelId: '1242873167702265927'
+logChannelId: '111111111111111111'
 
 # ID of the category under which ticket channels will be created
-ticketCategoryId: '1240721969880760380' # Parent category ID for ticket channels
+ticketCategoryId: '111111111111111111' # Parent category ID for ticket channels
 
 # ================================
 # Ticket Category Settings

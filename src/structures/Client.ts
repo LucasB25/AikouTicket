@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import {
     ApplicationCommandType,
     Client,
@@ -16,13 +15,14 @@ import { fileURLToPath } from 'node:url';
 
 import Logger from './Logger.js';
 import config from '../config.js';
+import ServerData from '../database/server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default class Bot extends Client {
     public config = config;
     public logger = new Logger();
-    public readonly prisma: PrismaClient = new PrismaClient();
+    public db = new ServerData();
     public readonly color = config.color;
     public commands = new Collection<string, any>();
     private data: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];

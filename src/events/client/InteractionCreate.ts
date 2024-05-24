@@ -39,9 +39,7 @@ export default class InteractionCreate extends Event {
         await interaction.deferReply({ ephemeral: true }).catch(() => {});
         try {
             const config = await TicketManager.readConfigFile();
-            const selectMenuOptions = await this.client.prisma.tickets.findUnique({
-                where: { guildId: interaction.guild.id },
-            });
+            const selectMenuOptions = await this.client.db.get(interaction.guild.id);
 
             if (selectMenuOptions?.selectMenuOptions) {
                 const parsedOptions = JSON.parse(selectMenuOptions.selectMenuOptions);
