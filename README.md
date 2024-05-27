@@ -26,7 +26,7 @@
 
 # AikouTicket
 
-AikouTicket is a versatile Discord bot that now also offers text-to-text capabilities through its integration with Google Gemini, an advanced text generation model platform. It automatically responds to specific commands on Discord, generating text or images based on the nature of users' requests.
+AikouTicket is a Discord bot specialized in managing support tickets. It allows users to create, manage, and track tickets directly from their Discord server, thus facilitating support and organization of user requests.
 
 ## 🔧 Requirements
 
@@ -64,7 +64,8 @@ or you can use the [.env.example](https://raw.githubusercontent.com/LucasB25/Aik
 ```bash
 TOKEN= #Discord Bot Token
 CLIENT_ID= #Discord Bot Client ID
-Activity=/help
+ACTIVITY=/help
+LOGSBOT= #ID of the channel where bot logs will be sent
 DATABASE_URL = "" # Your database url (If you want to use sqlite, then you can leave it blank.).
 ```
 
