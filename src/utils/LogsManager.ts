@@ -1,3 +1,4 @@
+import * as discordTranscripts from 'discord-html-transcripts';
 import {
     ButtonInteraction,
     CommandInteraction,
@@ -13,6 +14,7 @@ import { Bot } from '../structures/index.js';
 
 interface Config {
     logChannelId: Snowflake;
+    enableTranscripts: boolean;
 }
 
 export class LogsManager {
@@ -40,7 +42,9 @@ export class LogsManager {
         categoryLabel: string,
         ticketChannel: GuildChannel
     ): Promise<void> {
+        const config = await this.readConfigFile();
         const logChannel = await this.getLogChannel(client);
+
         const embed = this.createLogEmbed(
             interaction,
             userName,
@@ -48,7 +52,26 @@ export class LogsManager {
             `Ticket Logs | Ticket Closed`,
             `- **Closed By:** \n> ${interaction.user.username}\n\n- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`
         );
-        await logChannel.send({ embeds: [embed] });
+
+        if (config.enableTranscripts) {
+            try {
+                const transcript = await discordTranscripts.createTranscript(
+                    ticketChannel as TextChannel
+                );
+                await logChannel.send({
+                    embeds: [embed],
+                    files: [transcript],
+                });
+            } catch (error) {
+                client.logger.error('Failed to create transcript:', error);
+                await logChannel.send({
+                    embeds: [embed],
+                    content: 'Failed to create transcript.',
+                });
+            }
+        } else {
+            await logChannel.send({ embeds: [embed] });
+        }
     }
 
     private static createLogEmbed(

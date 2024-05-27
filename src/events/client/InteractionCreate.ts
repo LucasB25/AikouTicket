@@ -94,15 +94,21 @@ export default class InteractionCreate extends Event {
             content: 'Ticket will be closed in 10 seconds.',
             ephemeral: false,
         });
+
         setTimeout(async () => {
-            await LogsManager.logTicketDeletion(
-                interaction,
-                this.client,
-                interaction.user.username,
-                categoryLabel,
-                channel
-            );
-            await channel.delete('Ticket closed by user.');
+            try {
+                await LogsManager.logTicketDeletion(
+                    interaction,
+                    this.client,
+                    interaction.user.username,
+                    categoryLabel,
+                    channel
+                );
+
+                await channel.delete('Ticket closed by user.');
+            } catch (error) {
+                this.client.logger.error('Failed to create transcript:', error);
+            }
         }, 10000);
     }
 
