@@ -1,4 +1,13 @@
-import { ActionRowBuilder, ChannelType, StringSelectMenuBuilder, TextChannel } from 'discord.js';
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChannelType,
+    EmbedBuilder,
+    MessageComponentInteraction,
+    StringSelectMenuBuilder,
+    TextChannel,
+} from 'discord.js';
 
 import { Bot, Context, Event } from '../../structures/index.js';
 import { LogsManager } from '../../utils/LogsManager.js';
@@ -14,8 +23,12 @@ export default class InteractionCreate extends Event {
             await this.handleCommandInteraction(interaction);
         } else if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
             await this.handleSelectMenuInteraction(interaction);
-        } else if (interaction.isButton() && interaction.customId === 'close-ticket') {
-            await this.handleButtonInteraction(interaction);
+        } else if (interaction.isButton()) {
+            if (interaction.customId === 'close-ticket') {
+                await this.handleCloseTicketButton(interaction);
+            } else if (interaction.customId === 'confirm-close-ticket') {
+                await this.handleConfirmCloseTicketButton(interaction);
+            }
         }
     }
 
@@ -84,14 +97,62 @@ export default class InteractionCreate extends Event {
         }
     }
 
-    private async handleButtonInteraction(interaction: any): Promise<void> {
+    private async handleCloseTicketButton(interaction: any): Promise<void> {
+        const confirmationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+                .setCustomId('confirm-close-ticket')
+                .setLabel('Confirm')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('⛔')
+        );
+
+        const embed = new EmbedBuilder()
+            .setColor('#FF2400')
+            .setTitle('Confirm Ticket Closure')
+            .setDescription('Are you sure you want to close the ticket?')
+            .setFooter({ text: 'You have 60 seconds to respond.' });
+
+        const message = await interaction.reply({
+            embeds: [embed],
+            components: [confirmationButtons],
+            ephemeral: true,
+        });
+
+        let shouldDeleteMessage = true;
+
+        setTimeout(async () => {
+            if (shouldDeleteMessage) {
+                await message
+                    .delete()
+                    .catch(error => this.client.logger.error('Failed to delete message:', error));
+            }
+        }, 60000);
+
+        const filter = (i: MessageComponentInteraction): boolean =>
+            i.customId === 'confirm-close-ticket';
+        const collector = interaction.channel.createMessageComponentCollector({
+            filter,
+            time: 60000,
+        });
+
+        collector.on('collect', async () => {
+            shouldDeleteMessage = false;
+            collector.stop();
+        });
+    }
+
+    private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
         const channel = interaction.channel as TextChannel;
 
         const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
         const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
 
+        const embed = new EmbedBuilder()
+            .setColor(this.client.color)
+            .setDescription('Ticket will be closed in 10 seconds.');
+
         await interaction.reply({
-            content: 'Ticket will be closed in 10 seconds.',
+            embeds: [embed],
             ephemeral: false,
         });
 

@@ -25,10 +25,10 @@
     },
     "homepage": "https://github.com/LucasB25/AikouTicket#readme",
     "devDependencies": {
-        "@types/node": "^20.12.12",
+        "@types/node": "^20.12.13",
         "@types/signale": "^1.4.7",
-        "@typescript-eslint/eslint-plugin": "^7.10.0",
-        "@typescript-eslint/parser": "^7.10.0",
+        "@typescript-eslint/eslint-plugin": "^7.11.0",
+        "@typescript-eslint/parser": "^7.11.0",
         "eslint": "^8.57.0",
         "eslint-plugin-import": "^2.29.1",
         "eslint-plugin-unicorn": "^53.0.0",

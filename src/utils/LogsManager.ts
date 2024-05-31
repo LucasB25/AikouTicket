@@ -30,7 +30,7 @@ export class LogsManager {
             interaction.user.username,
             '#2FF200',
             `Ticket Logs | Ticket Created`,
-            `- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`
+            `- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n> (${ticketChannel.name} - ID: ${ticketChannel.id}) \n\n- **Category:** \n> ${categoryLabel}`
         );
         await logChannel.send({ embeds: [embed] });
     }
@@ -50,7 +50,7 @@ export class LogsManager {
             userName,
             '#FF2400',
             `Ticket Logs | Ticket Closed`,
-            `- **Closed By:** \n> ${interaction.user.username}\n\n- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n\n- **Category:** \n> ${categoryLabel}`
+            `- **Closed By:** \n> ${interaction.user.username}\n\n- **Ticket Creator:** \n> ${interaction.user.username}\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n> (${ticketChannel.name} - ID: ${ticketChannel.id}) \n\n- **Category:** \n> ${categoryLabel}`
         );
 
         if (config.enableTranscripts) {
