@@ -13,6 +13,7 @@ supportRoles:
 logChannelId: '111111111111111111' # ID of the channel where ticket logs will be sent
 ticketCategoryId: '111111111111111111' # ID of the category under which ticket channels will be created
 enableTranscripts: true # Enable or disable the creation and sending of ticket transcripts
+enableClaimButton: true # Enable or disable the claim button for tickets
 
 # ================================
 # Ticket Category Settings

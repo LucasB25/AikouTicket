@@ -22,6 +22,7 @@ interface Config {
     ticketCategoryId: Snowflake;
     maxActiveTicketsPerUser: number;
     menuPlaceholder: string;
+    enableClaimButton: boolean;
     ticketCategories: {
         [key: string]: {
             menuLabel: string;
@@ -44,7 +45,7 @@ export class TicketManager {
             }
 
             const config = await this.readConfigFile();
-            const { supportRoles, ticketCategoryId, ticketCategories } = config;
+            const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = config;
             const userName = interaction.user.username;
 
             if (!(categoryLabel.toLowerCase() in ticketCategories)) {
@@ -67,12 +68,12 @@ export class TicketManager {
                 categoryConfig.embedDescription
             );
             const closeButton = this.createCloseButton();
-            const claimButton = this.createClaimButton();
+            const claimButton = this.createClaimButton(enableClaimButton);
 
-            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-                closeButton,
-                claimButton
-            );
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
+            if (claimButton) {
+                row.addComponents(claimButton);
+            }
             const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
             const messageContent = `${roleMentions}`;
 
@@ -149,7 +150,10 @@ export class TicketManager {
             .setEmoji('🔒');
     }
 
-    private static createClaimButton(): ButtonBuilder {
+    private static createClaimButton(enableClaimButton: boolean): ButtonBuilder | null {
+        if (!enableClaimButton) {
+            return null;
+        }
         return new ButtonBuilder()
             .setCustomId('claim-ticket')
             .setLabel('Claim')
