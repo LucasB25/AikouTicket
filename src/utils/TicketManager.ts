@@ -48,11 +48,12 @@ export class TicketManager {
             const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = config;
             const userName = interaction.user.username;
 
-            if (!(categoryLabel.toLowerCase() in ticketCategories)) {
+            const normalizedCategoryLabel = categoryLabel.toLowerCase();
+            if (!(normalizedCategoryLabel in ticketCategories)) {
                 throw new Error(`Category "${categoryLabel}" not found in config.`);
             }
 
-            const categoryConfig = ticketCategories[categoryLabel.toLowerCase()];
+            const categoryConfig = ticketCategories[normalizedCategoryLabel];
             const channel = await this.createChannel(
                 interaction,
                 userName,
@@ -75,7 +76,7 @@ export class TicketManager {
                 row.addComponents(claimButton);
             }
             const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
-            const messageContent = `${roleMentions}`;
+            const messageContent = roleMentions;
 
             const message = await channel.send({
                 content: messageContent,
@@ -83,9 +84,8 @@ export class TicketManager {
                 components: [row],
             });
 
-            await message.pin().then(() => {
-                message.channel.bulkDelete(1);
-            });
+            await message.pin();
+            await message.channel.bulkDelete(1);
 
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
 
@@ -109,15 +109,18 @@ export class TicketManager {
             topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
             parent: ticketCategoryId,
             permissionOverwrites: [
-                { id: interaction.guild.id, deny: ['ViewChannel', 'SendMessages'] },
+                {
+                    id: interaction.guild.id,
+                    deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+                },
                 {
                     id: interaction.user.id,
                     allow: [
-                        'ViewChannel',
-                        'SendMessages',
-                        'ReadMessageHistory',
-                        'AttachFiles',
-                        'EmbedLinks',
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.ReadMessageHistory,
+                        PermissionFlagsBits.AttachFiles,
+                        PermissionFlagsBits.EmbedLinks,
                     ],
                 },
                 ...supportRoles.map(roleId => ({
@@ -168,18 +171,20 @@ export class TicketManager {
         categoryLabel: string,
         embedDescription: string
     ): EmbedBuilder {
+        const userAvatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 1024 });
+
         return client
             .embed()
-            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }))
+            .setThumbnail(userAvatarURL)
             .setAuthor({
                 name: categoryLabel,
-                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
+                iconURL: userAvatarURL,
             })
             .setDescription(embedDescription)
             .setColor('#00ff00')
             .setFooter({
                 text: userName,
-                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
+                iconURL: userAvatarURL,
             })
             .setTimestamp();
     }

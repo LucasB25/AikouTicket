@@ -19,80 +19,84 @@ export default class InteractionCreate extends Event {
     }
 
     public async run(interaction: any): Promise<void> {
-        if (interaction.isCommand()) {
-            await this.handleCommandInteraction(interaction);
-        } else if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
-            await this.handleSelectMenuInteraction(interaction);
-        } else if (interaction.isButton()) {
-            if (interaction.customId === 'close-ticket') {
-                await this.handleCloseTicketButton(interaction);
-            } else if (interaction.customId === 'confirm-close-ticket') {
-                await this.handleConfirmCloseTicketButton(interaction);
-            } else if (interaction.customId === 'claim-ticket') {
-                await this.handleClaimTicketButton(interaction);
-            } else if (interaction.customId === 'unclaim-ticket') {
-                await this.handleUnclaimTicketButton(interaction);
+        try {
+            if (interaction.isCommand()) {
+                await this.handleCommandInteraction(interaction);
+            } else if (
+                interaction.isStringSelectMenu() &&
+                interaction.customId === 'categoryMenu'
+            ) {
+                await this.handleSelectMenuInteraction(interaction);
+            } else if (interaction.isButton()) {
+                await this.handleButtonInteraction(interaction);
             }
+        } catch (error) {
+            this.client.logger.error(`Failed to handle interaction: ${error.message}`);
+            await interaction.reply({
+                content: `An error occurred: \`${error.message}\``,
+                ephemeral: true,
+            });
         }
     }
 
     private async handleCommandInteraction(interaction: any): Promise<void> {
+        const command = this.client.commands.get(interaction.commandName);
+        if (!command) return;
+
+        const ctx = new Context(interaction, interaction.options.data);
+        ctx.setArgs(interaction.options.data);
+
         try {
-            const command = this.client.commands.get(interaction.commandName);
-            if (!command) return;
-            const ctx = new Context(interaction, interaction.options.data);
-            ctx.setArgs(interaction.options.data);
             await command.run(this.client, ctx, ctx.args);
         } catch (error) {
             this.client.logger.error(error);
             await interaction.reply({
-                content: `An error occurred: \`${error}\``,
+                content: `An error occurred: \`${error.message}\``,
                 ephemeral: true,
             });
         }
     }
 
     private async handleSelectMenuInteraction(interaction: any): Promise<void> {
-        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+        await interaction.deferReply({ ephemeral: true });
+
         try {
             const config = await TicketManager.readConfigFile();
             const selectMenuOptions = await this.client.db.get(interaction.guild.id);
 
-            if (selectMenuOptions?.selectMenuOptions) {
-                const parsedOptions = JSON.parse(selectMenuOptions.selectMenuOptions);
-                await this.updateSelectMenu(interaction, config.menuPlaceholder, parsedOptions);
-
-                const selectedOption = interaction.values[0];
-                const category = parsedOptions.find((opt: any) => opt.value === selectedOption);
-
-                if (category) {
-                    const userTickets = interaction.guild.channels.cache.filter(
-                        channel =>
-                            channel.type === ChannelType.GuildText &&
-                            channel.name.startsWith(`ticket-${interaction.user.username}`)
-                    );
-
-                    if (userTickets.size >= config.maxActiveTicketsPerUser) {
-                        await interaction.editReply({
-                            content: `You have reached the maximum limit of active tickets (${config.maxActiveTicketsPerUser}).`,
-                        });
-                        return;
-                    }
-
-                    const channel = await TicketManager.createTicket(
-                        interaction,
-                        category.value,
-                        this.client
-                    );
-                    await this.replyWithTicketCreationResult(interaction, channel);
-                } else {
-                    await interaction.editReply({
-                        content: `Selected category is not valid.`,
-                    });
-                }
-            } else {
+            if (!selectMenuOptions?.selectMenuOptions) {
                 throw new Error('No select menu options found.');
             }
+
+            const parsedOptions = JSON.parse(selectMenuOptions.selectMenuOptions);
+            await this.updateSelectMenu(interaction, config.menuPlaceholder, parsedOptions);
+
+            const selectedOption = interaction.values[0];
+            const category = parsedOptions.find((opt: any) => opt.value === selectedOption);
+
+            if (!category) {
+                throw new Error('Selected category is not valid.');
+            }
+
+            const userTickets = interaction.guild.channels.cache.filter(
+                channel =>
+                    channel.type === ChannelType.GuildText &&
+                    channel.name.startsWith(`ticket-${interaction.user.username}`)
+            );
+
+            if (userTickets.size >= config.maxActiveTicketsPerUser) {
+                await interaction.editReply({
+                    content: `You have reached the maximum limit of active tickets (${config.maxActiveTicketsPerUser}).`,
+                });
+                return;
+            }
+
+            const channel = await TicketManager.createTicket(
+                interaction,
+                category.value,
+                this.client
+            );
+            await this.replyWithTicketCreationResult(interaction, channel);
         } catch (error) {
             this.client.logger.error(error);
             await interaction.editReply({
@@ -101,18 +105,29 @@ export default class InteractionCreate extends Event {
         }
     }
 
+    private async handleButtonInteraction(interaction: any): Promise<void> {
+        switch (interaction.customId) {
+            case 'close-ticket':
+                await this.handleCloseTicketButton(interaction);
+                break;
+            case 'confirm-close-ticket':
+                await this.handleConfirmCloseTicketButton(interaction);
+                break;
+            case 'claim-ticket':
+                await this.handleClaimTicketButton(interaction);
+                break;
+            case 'unclaim-ticket':
+                await this.handleUnclaimTicketButton(interaction);
+                break;
+        }
+    }
+
     private async handleClaimTicketButton(interaction: any): Promise<void> {
         const config = await TicketManager.readConfigFile();
         const supportRoles = config.supportRoles;
 
-        let memberRoles: string[];
-        if (Array.isArray(interaction.member.roles)) {
-            memberRoles = interaction.member.roles;
-        } else {
-            memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        }
-
-        const isSupport = memberRoles.some((role: any) => supportRoles.includes(role));
+        const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        const isSupport = memberRoles.some(role => supportRoles.includes(role));
 
         if (!isSupport) {
             await interaction.reply({
@@ -133,12 +148,13 @@ export default class InteractionCreate extends Event {
             ephemeral: false,
         });
 
-        const claimButtonIndex = interaction.message.components[0].components.findIndex(
+        const components = interaction.message.components[0].components;
+        const claimButtonIndex = components.findIndex(
             component => component.customId === 'claim-ticket'
         );
 
         if (claimButtonIndex !== -1) {
-            interaction.message.components[0].components[claimButtonIndex] = new ButtonBuilder()
+            components[claimButtonIndex] = new ButtonBuilder()
                 .setCustomId('claim-ticket')
                 .setLabel('Claimed')
                 .setStyle(ButtonStyle.Secondary)
@@ -151,11 +167,11 @@ export default class InteractionCreate extends Event {
                 .setStyle(ButtonStyle.Danger)
                 .setEmoji('⚠️');
 
-            interaction.message.components[0].components.push(unclaimButton);
+            components.push(unclaimButton);
         }
 
         await interaction.message.edit({
-            components: [interaction.message.components[0]],
+            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
         });
     }
 
@@ -163,14 +179,8 @@ export default class InteractionCreate extends Event {
         const config = await TicketManager.readConfigFile();
         const supportRoles = config.supportRoles;
 
-        let memberRoles: string[];
-        if (Array.isArray(interaction.member.roles)) {
-            memberRoles = interaction.member.roles;
-        } else {
-            memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        }
-
-        const isSupport = memberRoles.some((role: any) => supportRoles.includes(role));
+        const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        const isSupport = memberRoles.some(role => supportRoles.includes(role));
 
         if (!isSupport) {
             await interaction.reply({
@@ -180,28 +190,29 @@ export default class InteractionCreate extends Event {
             return;
         }
 
-        const claimButtonIndex = interaction.message.components[0].components.findIndex(
+        const components = interaction.message.components[0].components;
+        const claimButtonIndex = components.findIndex(
             component => component.customId === 'claim-ticket'
         );
 
         if (claimButtonIndex !== -1) {
-            interaction.message.components[0].components[claimButtonIndex] = new ButtonBuilder()
+            components[claimButtonIndex] = new ButtonBuilder()
                 .setCustomId('claim-ticket')
                 .setLabel('Claim')
                 .setStyle(ButtonStyle.Primary)
                 .setEmoji('🎫');
         }
 
-        const unclaimButtonIndex = interaction.message.components[0].components.findIndex(
+        const unclaimButtonIndex = components.findIndex(
             component => component.customId === 'unclaim-ticket'
         );
 
         if (unclaimButtonIndex !== -1) {
-            interaction.message.components[0].components.splice(unclaimButtonIndex, 1);
+            components.splice(unclaimButtonIndex, 1);
         }
 
         await interaction.message.edit({
-            components: [interaction.message.components[0]],
+            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
         });
     }
 
@@ -276,7 +287,7 @@ export default class InteractionCreate extends Event {
 
                 await channel.delete('Ticket closed by user.');
             } catch (error) {
-                this.client.logger.error('Failed to create transcript:', error);
+                this.client.logger.error('Failed to delete channel:', error);
             }
         }, 10000);
     }
@@ -299,7 +310,10 @@ export default class InteractionCreate extends Event {
         await interaction.message.edit({ components: [updatedActionRow] });
     }
 
-    private async replyWithTicketCreationResult(interaction: any, channel: any): Promise<void> {
+    private async replyWithTicketCreationResult(
+        interaction: any,
+        channel: TextChannel | null
+    ): Promise<void> {
         if (channel) {
             await interaction.editReply({
                 content: `Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`,

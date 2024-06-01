@@ -4,10 +4,9 @@ import {
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
 } from 'discord.js';
-import fs from 'node:fs';
-import YAML from 'yaml';
 
 import { Bot, Command, Context } from '../../structures/index.js';
+import { TicketManager } from '../../utils/TicketManager.js';
 
 export default class PanelCommand extends Command {
     constructor(client: Bot) {
@@ -37,18 +36,7 @@ export default class PanelCommand extends Command {
 
     async run(client: Bot, ctx: Context): Promise<void> {
         await ctx.sendDeferMessage({ ephemeral: true });
-        let config;
-        try {
-            const configFile = fs.readFileSync('./config.yml', 'utf8');
-            config = YAML.parse(configFile);
-        } catch (error) {
-            console.error('Error reading or parsing config file:', error);
-            await ctx.editMessage({
-                content:
-                    'There was an error loading the configuration. Please contact the administrator.',
-            });
-            return;
-        }
+        const config = await TicketManager.readConfigFile();
 
         const panelEmbed = this.createPanelEmbed(client);
         const selectMenu = this.createSelectMenu(config.ticketCategories, config.menuPlaceholder);
@@ -59,12 +47,11 @@ export default class PanelCommand extends Command {
 
         try {
             await ctx.editMessage({ content: 'Sending the panel in this channel...' });
-
             await ctx.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
-
             await this.saveTicketData(ctx.guild.id, selectMenu.options);
+            await ctx.editMessage({ content: 'Panel sent successfully.', ephemeral: true });
         } catch (error) {
-            console.error('Error sending the panel or saving ticket data:', error);
+            this.client.logger.error('Error sending the panel or saving ticket data:', error);
             await ctx.editMessage({
                 content: 'There was an error sending the panel. Please contact the administrator.',
             });
@@ -109,6 +96,10 @@ export default class PanelCommand extends Command {
     }
 
     async saveTicketData(guildId: string, options: any): Promise<void> {
-        await this.client.db.saveTicketData(guildId, options);
+        try {
+            await this.client.db.saveTicketData(guildId, options);
+        } catch (error) {
+            this.client.logger.error('Error saving ticket data:', error);
+        }
     }
 }

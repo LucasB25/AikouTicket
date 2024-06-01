@@ -81,24 +81,25 @@ export class LogsManager {
         author: string,
         description: string
     ): EmbedBuilder {
+        const userAvatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 1024 });
+
         return new EmbedBuilder()
-            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }))
+            .setThumbnail(userAvatarURL)
             .setAuthor({
                 name: author,
-                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
+                iconURL: userAvatarURL,
             })
             .setDescription(description)
             .setColor(color as any)
             .setFooter({
                 text: userName,
-                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
+                iconURL: userAvatarURL,
             })
             .setTimestamp();
     }
 
     private static async getLogChannel(client: Bot): Promise<TextChannel> {
-        const config = await this.readConfigFile();
-        const logChannelId = config.logChannelId;
+        const { logChannelId } = await this.readConfigFile();
         const logChannel = (await client.channels.fetch(logChannelId)) as TextChannel;
 
         if (!logChannel) {
