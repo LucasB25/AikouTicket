@@ -82,16 +82,16 @@ export class LogsManager {
         description: string
     ): EmbedBuilder {
         return new EmbedBuilder()
-            .setThumbnail(interaction.user.avatarURL({ extension: 'png', size: 1024 }) ?? '')
+            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }))
             .setAuthor({
                 name: author,
-                iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }) ?? '',
+                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
             })
             .setDescription(description)
             .setColor(color as any)
             .setFooter({
                 text: userName,
-                iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }) ?? '',
+                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
             })
             .setTimestamp();
     }

@@ -28,6 +28,10 @@ export default class InteractionCreate extends Event {
                 await this.handleCloseTicketButton(interaction);
             } else if (interaction.customId === 'confirm-close-ticket') {
                 await this.handleConfirmCloseTicketButton(interaction);
+            } else if (interaction.customId === 'claim-ticket') {
+                await this.handleClaimTicketButton(interaction);
+            } else if (interaction.customId === 'unclaim-ticket') {
+                await this.handleUnclaimTicketButton(interaction);
             }
         }
     }
@@ -95,6 +99,110 @@ export default class InteractionCreate extends Event {
                 content: 'Failed to update the select menu.',
             });
         }
+    }
+
+    private async handleClaimTicketButton(interaction: any): Promise<void> {
+        const config = await TicketManager.readConfigFile();
+        const supportRoles = config.supportRoles;
+
+        let memberRoles: string[];
+        if (Array.isArray(interaction.member.roles)) {
+            memberRoles = interaction.member.roles;
+        } else {
+            memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        }
+
+        const isSupport = memberRoles.some((role: any) => supportRoles.includes(role));
+
+        if (!isSupport) {
+            await interaction.reply({
+                content: 'You do not have permission to claim this ticket.',
+                ephemeral: true,
+            });
+            return;
+        }
+
+        const userName = interaction.user.username;
+
+        const embed = new EmbedBuilder()
+            .setColor('#00ff00')
+            .setDescription(`Ticket claimed by ${userName}.`);
+
+        await interaction.reply({
+            embeds: [embed],
+            ephemeral: false,
+        });
+
+        const claimButtonIndex = interaction.message.components[0].components.findIndex(
+            component => component.customId === 'claim-ticket'
+        );
+
+        if (claimButtonIndex !== -1) {
+            interaction.message.components[0].components[claimButtonIndex] = new ButtonBuilder()
+                .setCustomId('claim-ticket')
+                .setLabel('Claimed')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true)
+                .setEmoji('🎫');
+
+            const unclaimButton = new ButtonBuilder()
+                .setCustomId('unclaim-ticket')
+                .setLabel('Unclaim')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('⚠️');
+
+            interaction.message.components[0].components.push(unclaimButton);
+        }
+
+        await interaction.message.edit({
+            components: [interaction.message.components[0]],
+        });
+    }
+
+    private async handleUnclaimTicketButton(interaction: any): Promise<void> {
+        const config = await TicketManager.readConfigFile();
+        const supportRoles = config.supportRoles;
+
+        let memberRoles: string[];
+        if (Array.isArray(interaction.member.roles)) {
+            memberRoles = interaction.member.roles;
+        } else {
+            memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        }
+
+        const isSupport = memberRoles.some((role: any) => supportRoles.includes(role));
+
+        if (!isSupport) {
+            await interaction.reply({
+                content: 'You do not have permission to unclaim this ticket.',
+                ephemeral: true,
+            });
+            return;
+        }
+
+        const claimButtonIndex = interaction.message.components[0].components.findIndex(
+            component => component.customId === 'claim-ticket'
+        );
+
+        if (claimButtonIndex !== -1) {
+            interaction.message.components[0].components[claimButtonIndex] = new ButtonBuilder()
+                .setCustomId('claim-ticket')
+                .setLabel('Claim')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('🎫');
+        }
+
+        const unclaimButtonIndex = interaction.message.components[0].components.findIndex(
+            component => component.customId === 'unclaim-ticket'
+        );
+
+        if (unclaimButtonIndex !== -1) {
+            interaction.message.components[0].components.splice(unclaimButtonIndex, 1);
+        }
+
+        await interaction.message.edit({
+            components: [interaction.message.components[0]],
+        });
     }
 
     private async handleCloseTicketButton(interaction: any): Promise<void> {

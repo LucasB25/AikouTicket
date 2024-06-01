@@ -67,8 +67,12 @@ export class TicketManager {
                 categoryConfig.embedDescription
             );
             const closeButton = this.createCloseButton();
+            const claimButton = this.createClaimButton();
 
-            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                closeButton,
+                claimButton
+            );
             const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
             const messageContent = `${roleMentions}`;
 
@@ -131,7 +135,7 @@ export class TicketManager {
         const channel = await interaction.guild.channels.create(channelOptions);
 
         if (!(channel instanceof TextChannel)) {
-            throw new Error('Failed to create a text channel');
+            throw new Error(`Failed to create a text channel: Unexpected channel type`);
         }
 
         return channel;
@@ -145,6 +149,14 @@ export class TicketManager {
             .setEmoji('🔒');
     }
 
+    private static createClaimButton(): ButtonBuilder {
+        return new ButtonBuilder()
+            .setCustomId('claim-ticket')
+            .setLabel('Claim')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('🎫');
+    }
+
     public static createTicketEmbed(
         client: Bot,
         interaction: CommandInteraction | ButtonInteraction,
@@ -154,16 +166,16 @@ export class TicketManager {
     ): EmbedBuilder {
         return client
             .embed()
-            .setThumbnail(`${interaction.user.avatarURL({ extension: 'png', size: 1024 })}`)
+            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }))
             .setAuthor({
                 name: categoryLabel,
-                iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }),
+                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
             })
-            .setDescription(`${embedDescription}`)
+            .setDescription(embedDescription)
             .setColor('#00ff00')
             .setFooter({
                 text: userName,
-                iconURL: interaction.user.avatarURL({ extension: 'png', size: 1024 }),
+                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
             })
             .setTimestamp();
     }
@@ -173,7 +185,7 @@ export class TicketManager {
             const configFile = await fs.readFile('./config.yml', 'utf8');
             return YAML.parse(configFile) as Config;
         } catch (error) {
-            throw new Error(`Failed to read config file: ${error.message} `);
+            throw new Error(`Failed to read config file: ${error.message}`);
         }
     }
 }

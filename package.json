@@ -1,6 +1,6 @@
 {
     "name": "AikouTicket",
-    "version": "0.15.1",
+    "version": "0.15.3",
     "description": "A simple AikouTicket bot for discord",
     "type": "module",
     "main": "dist/index.js",
@@ -25,7 +25,7 @@
     },
     "homepage": "https://github.com/LucasB25/AikouTicket#readme",
     "devDependencies": {
-        "@types/node": "^20.12.13",
+        "@types/node": "^20.13.0",
         "@types/signale": "^1.4.7",
         "@typescript-eslint/eslint-plugin": "^7.11.0",
         "@typescript-eslint/parser": "^7.11.0",
