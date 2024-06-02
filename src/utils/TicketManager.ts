@@ -23,6 +23,7 @@ interface Config {
     maxActiveTicketsPerUser: number;
     menuPlaceholder: string;
     enableClaimButton: boolean;
+    closeTicketStaffOnly: boolean;
     ticketCategories: {
         [key: string]: {
             menuLabel: string;
@@ -173,7 +174,7 @@ export class TicketManager {
     ): EmbedBuilder {
         const userAvatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 1024 });
 
-        return client
+        const embed = client
             .embed()
             .setThumbnail(userAvatarURL)
             .setAuthor({
@@ -183,10 +184,12 @@ export class TicketManager {
             .setDescription(embedDescription)
             .setColor('#00ff00')
             .setFooter({
-                text: userName,
+                text: `Ticket created by ${userName}`,
                 iconURL: userAvatarURL,
             })
             .setTimestamp();
+
+        return embed;
     }
 
     public static async readConfigFile(): Promise<Config> {

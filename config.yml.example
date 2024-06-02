@@ -9,6 +9,7 @@ menuPlaceholder: 'Select a category to open a ticket.' # The placeholder text fo
 supportRoles:
     - '111111111111111111' # Support role ID 1
     - '111111111111111111' # Support role ID 2
+closeTicketStaffOnly: true # Allow only staff members with specified roles to close tickets
 
 logChannelId: '111111111111111111' # ID of the channel where ticket logs will be sent
 ticketCategoryId: '111111111111111111' # ID of the category under which ticket channels will be created

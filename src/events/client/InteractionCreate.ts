@@ -170,9 +170,21 @@ export default class InteractionCreate extends Event {
             components.push(unclaimButton);
         }
 
-        await interaction.message.edit({
-            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
-        });
+        const embeds = interaction.message.embeds;
+        if (embeds.length > 0) {
+            const existingEmbed = embeds[0];
+            const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(
+                existingEmbed.description + `\n\n> **Claimed by**: ${userName}`
+            );
+            interaction.message.edit({
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
+                embeds: [updatedEmbed],
+            });
+        } else {
+            await interaction.message.edit({
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
+            });
+        }
     }
 
     private async handleUnclaimTicketButton(interaction: any): Promise<void> {
@@ -210,13 +222,46 @@ export default class InteractionCreate extends Event {
         if (unclaimButtonIndex !== -1) {
             components.splice(unclaimButtonIndex, 1);
         }
-
-        await interaction.message.edit({
-            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
-        });
+        const userName = interaction.user.username;
+        const embeds = interaction.message.embeds;
+        if (embeds.length > 0) {
+            const existingEmbed = embeds[0];
+            const updatedDescription = existingEmbed.description.replace(`\n\n> **Claimed by**: ${userName}`, '');
+            const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(updatedDescription);
+            interaction.message.edit({
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
+                embeds: [updatedEmbed],
+            });
+        } else {
+            await interaction.message.edit({
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
+            });
+        }
     }
 
     private async handleCloseTicketButton(interaction: any): Promise<void> {
+        const config = await TicketManager.readConfigFile();
+        const supportRoles = config.supportRoles;
+        const closeTicketStaffOnly = config.closeTicketStaffOnly;
+
+        const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        const isSupport = memberRoles.some(role => supportRoles.includes(role));
+
+        if (closeTicketStaffOnly) {
+            if (!isSupport) {
+                await interaction.reply({
+                    content: 'You do not have permission to close this ticket.',
+                    ephemeral: true,
+                });
+                return;
+            }
+        } else {
+            if (interaction.channel.topic?.includes(interaction.user.id)) {
+                await this.handleConfirmCloseTicketButton(interaction);
+                return;
+            }
+        }
+
         const confirmationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
                 .setCustomId('confirm-close-ticket')
