@@ -119,6 +119,9 @@ export default class InteractionCreate extends Event {
             case 'unclaim-ticket':
                 await this.handleUnclaimTicketButton(interaction);
                 break;
+            case 'transcripts-ticket':
+                await this.handleTranscriptTicketButton(interaction);
+                break;
         }
     }
 
@@ -141,7 +144,15 @@ export default class InteractionCreate extends Event {
 
         const embed = new EmbedBuilder()
             .setColor('#00ff00')
-            .setDescription(`Ticket claimed by ${userName}.`);
+            .setTitle('Ticket Claimed')
+            .setDescription(
+                `Ticket claimed by ${userName}. \nI will start assisting you right away.`
+            )
+            .setFooter({
+                text: `Ticket claimed by ${userName}`,
+                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
+            })
+            .setTimestamp();
 
         await interaction.reply({
             embeds: [embed],
@@ -226,7 +237,10 @@ export default class InteractionCreate extends Event {
         const embeds = interaction.message.embeds;
         if (embeds.length > 0) {
             const existingEmbed = embeds[0];
-            const updatedDescription = existingEmbed.description.replace(`\n\n> **Claimed by**: ${userName}`, '');
+            const updatedDescription = existingEmbed.description.replace(
+                `\n\n> **Claimed by**: ${userName}`,
+                ''
+            );
             const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(updatedDescription);
             interaction.message.edit({
                 components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
@@ -267,7 +281,12 @@ export default class InteractionCreate extends Event {
                 .setCustomId('confirm-close-ticket')
                 .setLabel('Confirm')
                 .setStyle(ButtonStyle.Danger)
-                .setEmoji('⛔')
+                .setEmoji('⛔'),
+            new ButtonBuilder()
+                .setCustomId('transcripts-ticket')
+                .setLabel('Transcripts')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('📝')
         );
 
         const embed = new EmbedBuilder()
@@ -335,6 +354,21 @@ export default class InteractionCreate extends Event {
                 this.client.logger.error('Failed to delete channel:', error);
             }
         }, 10000);
+    }
+
+    private async handleTranscriptTicketButton(interaction: any): Promise<void> {
+        const userName = interaction.user.username;
+        const ticketChannel = interaction.channel;
+
+        await LogsManager.logTicketTranscript(interaction, this.client, userName, ticketChannel);
+        const embed = new EmbedBuilder()
+            .setColor(this.client.color)
+            .setDescription('The transcript of the ticket has been generated and logged.');
+
+        await interaction.reply({
+            embeds: [embed],
+            ephemeral: true,
+        });
     }
 
     private async updateSelectMenu(

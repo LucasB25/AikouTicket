@@ -12,6 +12,7 @@ supportRoles:
 closeTicketStaffOnly: true # Allow only staff members with specified roles to close tickets
 
 logChannelId: '111111111111111111' # ID of the channel where ticket logs will be sent
+transcriptLogsChannelId: '111111111111111111' # ID of the channel where ticket transcript logs will be sent
 ticketCategoryId: '111111111111111111' # ID of the category under which ticket channels will be created
 enableTranscripts: true # Enable or disable the creation and sending of ticket transcripts
 enableClaimButton: true # Enable or disable the claim button for tickets
@@ -21,6 +22,7 @@ enableClaimButton: true # Enable or disable the claim button for tickets
 # ================================
 # Define different categories of tickets here.
 # Each category should have a unique identifier.
+# The Discord limit is 25, but it's not advisable to use that many types, as each type consumes 2 categories, and Discord's maximum is 50. Using too many types could exhaust your category options for regular Discord channels...
 
 ticketCategories:
     # Category 1
@@ -31,6 +33,7 @@ ticketCategories:
         menuDescription: 'This category is for general inquiries and questions.'
         # Emoji associated with this category (leave empty if none)
         menuEmoji: '😀'
+
         # ================================
         # Embed description for this category
         embedDescription: 'Welcome to Category 1! Feel free to ask any general questions or make inquiries here.'
@@ -43,6 +46,7 @@ ticketCategories:
         menuDescription: 'Use this category for technical support and troubleshooting.'
         # Emoji associated with this category (leave empty if none)
         menuEmoji: '🔧'
+
         # ================================
         # Embed description for this category
         embedDescription: 'Welcome to Category 2! Need technical support or facing any issues? Ask here.'
@@ -55,6 +59,7 @@ ticketCategories:
         menuDescription: 'For billing-related inquiries and payment issues.'
         # Emoji associated with this category (leave empty if none)
         menuEmoji: '💳'
+
         # ================================
         # Embed description for this category
         embedDescription: 'Welcome to Category 3! Have any questions or issues regarding billing or payments? Let us know.'
