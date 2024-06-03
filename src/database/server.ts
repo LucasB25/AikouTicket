@@ -1,4 +1,4 @@
-import { PrismaClient, tickets } from '@prisma/client';
+import { PrismaClient, type tickets } from '@prisma/client';
 
 export default class ServerData {
     private prisma: PrismaClient;

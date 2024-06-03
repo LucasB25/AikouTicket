@@ -1,4 +1,4 @@
-import { Bot, Command, Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from '../../structures/index.js';
 
 export default class Help extends Command {
     constructor(client: Bot) {
@@ -29,7 +29,7 @@ export default class Help extends Command {
     async run(client: Bot, ctx: Context): Promise<void> {
         const categories = new Map<string, { name: string; description: string }[]>();
 
-        client.commands.forEach(cmd => {
+        client.commands.forEach((cmd) => {
             if (!categories.has(cmd.category)) {
                 categories.set(cmd.category, []);
             }
@@ -42,7 +42,7 @@ export default class Help extends Command {
         let commandList = '';
         categories.forEach((commands, category) => {
             commandList += `\n**${category.charAt(0).toUpperCase() + category.slice(1)}**\n`;
-            commandList += commands.map(cmd => `\`${cmd.name}\`: ${cmd.description}`).join('\n');
+            commandList += commands.map((cmd) => `\`${cmd.name}\`: ${cmd.description}`).join('\n');
             commandList += '\n';
         });
 

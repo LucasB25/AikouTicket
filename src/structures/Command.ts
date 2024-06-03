@@ -1,6 +1,5 @@
-import { ApplicationCommandOption, PermissionResolvable } from 'discord.js';
-
-import { Bot } from './index.js';
+import type { Bot } from './index.js';
+import type { ApplicationCommandOption, PermissionResolvable } from 'discord.js';
 
 interface CommandDescription {
     content: string;
@@ -58,7 +57,7 @@ export default class Command {
             },
             options = [],
             category = 'general',
-        }: CommandOptions
+        }: CommandOptions,
     ) {
         this.client = client;
         this.name = name;

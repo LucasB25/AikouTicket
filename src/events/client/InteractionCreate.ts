@@ -4,12 +4,12 @@ import {
     ButtonStyle,
     ChannelType,
     EmbedBuilder,
-    MessageComponentInteraction,
+    type MessageComponentInteraction,
     StringSelectMenuBuilder,
-    TextChannel,
+    type TextChannel,
 } from 'discord.js';
 
-import { Bot, Context, Event } from '../../structures/index.js';
+import { type Bot, Context, Event } from '../../structures/index.js';
 import { LogsManager } from '../../utils/LogsManager.js';
 import { TicketManager } from '../../utils/TicketManager.js';
 
@@ -22,10 +22,7 @@ export default class InteractionCreate extends Event {
         try {
             if (interaction.isCommand()) {
                 await this.handleCommandInteraction(interaction);
-            } else if (
-                interaction.isStringSelectMenu() &&
-                interaction.customId === 'categoryMenu'
-            ) {
+            } else if (interaction.isStringSelectMenu() && interaction.customId === 'categoryMenu') {
                 await this.handleSelectMenuInteraction(interaction);
             } else if (interaction.isButton()) {
                 await this.handleButtonInteraction(interaction);
@@ -79,9 +76,7 @@ export default class InteractionCreate extends Event {
             }
 
             const userTickets = interaction.guild.channels.cache.filter(
-                channel =>
-                    channel.type === ChannelType.GuildText &&
-                    channel.name.startsWith(`ticket-${interaction.user.username}`)
+                (channel) => channel.type === ChannelType.GuildText && channel.name.startsWith(`ticket-${interaction.user.username}`),
             );
 
             if (userTickets.size >= config.maxActiveTicketsPerUser) {
@@ -91,11 +86,7 @@ export default class InteractionCreate extends Event {
                 return;
             }
 
-            const channel = await TicketManager.createTicket(
-                interaction,
-                category.value,
-                this.client
-            );
+            const channel = await TicketManager.createTicket(interaction, category.value, this.client);
             await this.replyWithTicketCreationResult(interaction, channel);
         } catch (error) {
             this.client.logger.error(error);
@@ -130,7 +121,7 @@ export default class InteractionCreate extends Event {
         const supportRoles = config.supportRoles;
 
         const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        const isSupport = memberRoles.some(role => supportRoles.includes(role));
+        const isSupport = memberRoles.some((role) => supportRoles.includes(role));
 
         if (!isSupport) {
             await interaction.reply({
@@ -143,11 +134,9 @@ export default class InteractionCreate extends Event {
         const userName = interaction.user.username;
 
         const embed = new EmbedBuilder()
-            .setColor('#00ff00')
+            .setColor('#00FF00')
             .setTitle('Ticket Claimed')
-            .setDescription(
-                `Ticket claimed by ${userName}. \nI will start assisting you right away.`
-            )
+            .setDescription(`🎟️ **Ticket claimed by ${userName}.**\nI will start assisting you right away.`)
             .setFooter({
                 text: `Ticket claimed by ${userName}`,
                 iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
@@ -160,9 +149,7 @@ export default class InteractionCreate extends Event {
         });
 
         const components = interaction.message.components[0].components;
-        const claimButtonIndex = components.findIndex(
-            component => component.customId === 'claim-ticket'
-        );
+        const claimButtonIndex = components.findIndex((component) => component.customId === 'claim-ticket');
 
         if (claimButtonIndex !== -1) {
             components[claimButtonIndex] = new ButtonBuilder()
@@ -185,7 +172,7 @@ export default class InteractionCreate extends Event {
         if (embeds.length > 0) {
             const existingEmbed = embeds[0];
             const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(
-                existingEmbed.description + `\n\n> **Claimed by**: ${userName}`
+                `${existingEmbed.description}\n\n> **Claimed by**: ${userName}`,
             );
             interaction.message.edit({
                 components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
@@ -203,7 +190,7 @@ export default class InteractionCreate extends Event {
         const supportRoles = config.supportRoles;
 
         const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        const isSupport = memberRoles.some(role => supportRoles.includes(role));
+        const isSupport = memberRoles.some((role) => supportRoles.includes(role));
 
         if (!isSupport) {
             await interaction.reply({
@@ -214,9 +201,7 @@ export default class InteractionCreate extends Event {
         }
 
         const components = interaction.message.components[0].components;
-        const claimButtonIndex = components.findIndex(
-            component => component.customId === 'claim-ticket'
-        );
+        const claimButtonIndex = components.findIndex((component) => component.customId === 'claim-ticket');
 
         if (claimButtonIndex !== -1) {
             components[claimButtonIndex] = new ButtonBuilder()
@@ -226,9 +211,7 @@ export default class InteractionCreate extends Event {
                 .setEmoji('🎫');
         }
 
-        const unclaimButtonIndex = components.findIndex(
-            component => component.customId === 'unclaim-ticket'
-        );
+        const unclaimButtonIndex = components.findIndex((component) => component.customId === 'unclaim-ticket');
 
         if (unclaimButtonIndex !== -1) {
             components.splice(unclaimButtonIndex, 1);
@@ -237,10 +220,7 @@ export default class InteractionCreate extends Event {
         const embeds = interaction.message.embeds;
         if (embeds.length > 0) {
             const existingEmbed = embeds[0];
-            const updatedDescription = existingEmbed.description.replace(
-                `\n\n> **Claimed by**: ${userName}`,
-                ''
-            );
+            const updatedDescription = existingEmbed.description.replace(`\n\n> **Claimed by**: ${userName}`, '');
             const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(updatedDescription);
             interaction.message.edit({
                 components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
@@ -259,7 +239,7 @@ export default class InteractionCreate extends Event {
         const closeTicketStaffOnly = config.closeTicketStaffOnly;
 
         const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        const isSupport = memberRoles.some(role => supportRoles.includes(role));
+        const isSupport = memberRoles.some((role) => supportRoles.includes(role));
 
         if (closeTicketStaffOnly) {
             if (!isSupport) {
@@ -269,24 +249,14 @@ export default class InteractionCreate extends Event {
                 });
                 return;
             }
-        } else {
-            if (interaction.channel.topic?.includes(interaction.user.id)) {
-                await this.handleConfirmCloseTicketButton(interaction);
-                return;
-            }
+        } else if (interaction.channel.topic?.includes(interaction.user.id)) {
+            await this.handleConfirmCloseTicketButton(interaction);
+            return;
         }
 
         const confirmationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder()
-                .setCustomId('confirm-close-ticket')
-                .setLabel('Confirm')
-                .setStyle(ButtonStyle.Danger)
-                .setEmoji('⛔'),
-            new ButtonBuilder()
-                .setCustomId('transcripts-ticket')
-                .setLabel('Transcripts')
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('📝')
+            new ButtonBuilder().setCustomId('confirm-close-ticket').setLabel('Confirm').setStyle(ButtonStyle.Danger).setEmoji('⛔'),
+            new ButtonBuilder().setCustomId('transcripts-ticket').setLabel('Transcripts').setStyle(ButtonStyle.Primary).setEmoji('📝'),
         );
 
         const embed = new EmbedBuilder()
@@ -305,14 +275,11 @@ export default class InteractionCreate extends Event {
 
         setTimeout(async () => {
             if (shouldDeleteMessage) {
-                await message
-                    .delete()
-                    .catch(error => this.client.logger.error('Failed to delete message:', error));
+                await message.delete().catch((error) => this.client.logger.error('Failed to delete message:', error));
             }
         }, 60000);
 
-        const filter = (i: MessageComponentInteraction): boolean =>
-            i.customId === 'confirm-close-ticket';
+        const filter = (i: MessageComponentInteraction): boolean => i.customId === 'confirm-close-ticket';
         const collector = interaction.channel.createMessageComponentCollector({
             filter,
             time: 60000,
@@ -330,9 +297,7 @@ export default class InteractionCreate extends Event {
         const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
         const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
 
-        const embed = new EmbedBuilder()
-            .setColor(this.client.color)
-            .setDescription('Ticket will be closed in 10 seconds.');
+        const embed = new EmbedBuilder().setColor(this.client.color).setDescription('Ticket will be closed in 10 seconds.');
 
         await interaction.reply({
             embeds: [embed],
@@ -341,13 +306,7 @@ export default class InteractionCreate extends Event {
 
         setTimeout(async () => {
             try {
-                await LogsManager.logTicketDeletion(
-                    interaction,
-                    this.client,
-                    interaction.user.username,
-                    categoryLabel,
-                    channel
-                );
+                await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel);
 
                 await channel.delete('Ticket closed by user.');
             } catch (error) {
@@ -371,11 +330,7 @@ export default class InteractionCreate extends Event {
         });
     }
 
-    private async updateSelectMenu(
-        interaction: any,
-        placeholder: string,
-        options: any
-    ): Promise<void> {
+    private async updateSelectMenu(interaction: any, placeholder: string, options: any): Promise<void> {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('categoryMenu')
             .setPlaceholder(placeholder)
@@ -383,23 +338,32 @@ export default class InteractionCreate extends Event {
             .setMaxValues(1)
             .addOptions(options);
 
-        const updatedActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-            selectMenu
-        );
+        const updatedActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
         await interaction.message.edit({ components: [updatedActionRow] });
     }
 
-    private async replyWithTicketCreationResult(
-        interaction: any,
-        channel: TextChannel | null
-    ): Promise<void> {
+    private async replyWithTicketCreationResult(interaction: any, channel: TextChannel | null): Promise<void> {
         if (channel) {
             await interaction.editReply({
-                content: `Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`,
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor('#00FF00')
+                        .setTitle('Ticket Created')
+                        .setDescription(`Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`)
+                        .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
+                        .setTimestamp(),
+                ],
             });
         } else {
             await interaction.editReply({
-                content: `Failed to create ticket channel.`,
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor('#FF0000')
+                        .setTitle('Ticket Creation Failed')
+                        .setDescription('Failed to create ticket channel.')
+                        .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
+                        .setTimestamp(),
+                ],
             });
         }
     }

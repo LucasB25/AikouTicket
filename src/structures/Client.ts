@@ -1,12 +1,11 @@
 import {
     ApplicationCommandType,
     Client,
-    ClientOptions,
     Collection,
     EmbedBuilder,
     PermissionsBitField,
     REST,
-    RESTPostAPIChatInputApplicationCommandsJSONBody,
+    type RESTPostAPIChatInputApplicationCommandsJSONBody,
     Routes,
 } from 'discord.js';
 import fs from 'node:fs';
@@ -27,10 +26,6 @@ export default class Bot extends Client {
     public commands = new Collection<string, any>();
     private data: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
-    constructor(options: ClientOptions) {
-        super(options);
-    }
-
     public async start(token: string): Promise<void> {
         try {
             this.logger.start('Starting bot...');
@@ -49,9 +44,7 @@ export default class Bot extends Client {
     private async loadEvents(): Promise<void> {
         const events = fs.readdirSync(path.join(__dirname, '../events'));
         for (const event of events) {
-            const eventFiles = fs
-                .readdirSync(path.join(__dirname, `../events/${event}`))
-                .filter(file => file.endsWith('.js'));
+            const eventFiles = fs.readdirSync(path.join(__dirname, `../events/${event}`)).filter((file) => file.endsWith('.js'));
             for (const file of eventFiles) {
                 const eventFile = (await import(`../events/${event}/${file}`)).default;
                 const eventClass = new eventFile(this, file);
@@ -63,9 +56,7 @@ export default class Bot extends Client {
     private async loadCommands(): Promise<void> {
         const commandsPath = fs.readdirSync(path.join(__dirname, '../commands'));
         for (const commandPath of commandsPath) {
-            const commandFiles = fs
-                .readdirSync(path.join(__dirname, `../commands/${commandPath}`))
-                .filter(file => file.endsWith('.js'));
+            const commandFiles = fs.readdirSync(path.join(__dirname, `../commands/${commandPath}`)).filter((file) => file.endsWith('.js'));
             for (const file of commandFiles) {
                 const commandFile = (await import(`../commands/${commandPath}/${file}`)).default;
                 const command = new commandFile(this, file);
@@ -77,15 +68,11 @@ export default class Bot extends Client {
                     options: command.options || null,
                     name_localizations: command.nameLocalizations || null,
                     description_localizations: command.descriptionLocalizations || null,
-                    default_member_permissions:
-                        command.permissions.user.length > 0 ? command.permissions.user : null,
+                    default_member_permissions: command.permissions.user.length > 0 ? command.permissions.user : null,
                 };
                 if (command.permissions.user.length > 0) {
                     const permissionValue = PermissionsBitField.resolve(command.permissions.user);
-                    data.default_member_permissions =
-                        typeof permissionValue === 'bigint'
-                            ? permissionValue.toString()
-                            : permissionValue;
+                    data.default_member_permissions = typeof permissionValue === 'bigint' ? permissionValue.toString() : permissionValue;
                 }
                 this.data.push(data);
             }
@@ -96,7 +83,7 @@ export default class Bot extends Client {
             try {
                 const rest = new REST({ version: '10' }).setToken(this.config.token ?? '');
                 await rest.put(applicationCommands, { body: this.data });
-                this.logger.info(`Successfully loaded slash commands!`);
+                this.logger.info('Successfully loaded slash commands!');
             } catch (error) {
                 this.logger.error(error);
             }

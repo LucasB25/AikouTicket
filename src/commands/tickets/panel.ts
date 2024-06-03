@@ -1,11 +1,6 @@
-import {
-    ActionRowBuilder,
-    EmbedBuilder,
-    StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder,
-} from 'discord.js';
+import { ActionRowBuilder, type EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 
-import { Bot, Command, Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from '../../structures/index.js';
 import { TicketManager } from '../../utils/TicketManager.js';
 
 export default class PanelCommand extends Command {
@@ -41,9 +36,7 @@ export default class PanelCommand extends Command {
         const panelEmbed = this.createPanelEmbed(client);
         const selectMenu = this.createSelectMenu(config.ticketCategories, config.menuPlaceholder);
 
-        const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-            selectMenu
-        );
+        const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
         try {
             await ctx.editMessage({ content: 'Sending the panel in this channel...' });
@@ -63,17 +56,15 @@ export default class PanelCommand extends Command {
             .embed()
             .setColor(this.client.color)
             .setTitle('AikouTicket')
-            .setDescription(
-                'To create a support ticket, please select one of the options below based on the assistance you require.'
-            )
+            .setDescription('To create a support ticket, please select one of the options below based on the assistance you require.')
             .setImage(
-                'https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&'
+                'https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&',
             )
             .setTimestamp();
     }
 
     createSelectMenu(ticketCategories: any, placeholder: string): StringSelectMenuBuilder {
-        const options = Object.keys(ticketCategories).map(customId => {
+        const options = Object.keys(ticketCategories).map((customId) => {
             const category = ticketCategories[customId];
             const option = new StringSelectMenuOptionBuilder()
                 .setLabel(category.menuLabel)

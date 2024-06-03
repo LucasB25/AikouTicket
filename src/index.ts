@@ -1,4 +1,4 @@
-import { ClientOptions, Partials, TextChannel } from 'discord.js';
+import { type ClientOptions, Partials, type TextChannel } from 'discord.js';
 
 import config from './config.js';
 import Bot from './structures/Client.js';
@@ -28,9 +28,7 @@ function setupEventListeners(client: Bot): void {
         try {
             const logChannel = client.channels.cache.get(config.logsbot) as TextChannel;
             if (logChannel) {
-                await logChannel.send(
-                    `**[${type}]** ${error.name}: ${error.message}\n\`\`\`${error.stack}\`\`\``
-                );
+                await logChannel.send(`**[${type}]** ${error.name}: ${error.message}\n\`\`\`${error.stack}\`\`\``);
             } else {
                 client.logger.error(`Log channel not found: ${config.logsbot}`);
             }

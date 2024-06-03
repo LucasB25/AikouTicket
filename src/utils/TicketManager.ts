@@ -1,21 +1,21 @@
+import type { Bot } from '../structures/index.js';
 import {
     ActionRowBuilder,
     ButtonBuilder,
-    ButtonInteraction,
+    type ButtonInteraction,
     ButtonStyle,
     ChannelType,
-    CommandInteraction,
+    type CommandInteraction,
     EmbedBuilder,
-    GuildChannelCreateOptions,
+    type GuildChannelCreateOptions,
     PermissionFlagsBits,
-    Snowflake,
+    type Snowflake,
     TextChannel,
 } from 'discord.js';
 import { promises as fs } from 'node:fs';
 import YAML from 'yaml';
 
 import { LogsManager } from './LogsManager.js';
-import { Bot } from '../structures/index.js';
 
 interface Config {
     supportRoles: Snowflake[];
@@ -38,14 +38,14 @@ export class TicketManager {
     public static async createTicket(
         interaction: CommandInteraction | ButtonInteraction,
         categoryLabel: string,
-        client: Bot
+        client: Bot,
     ): Promise<TextChannel | null> {
         try {
             if (!categoryLabel) {
                 throw new Error('Category label is undefined.');
             }
 
-            const config = await this.readConfigFile();
+            const config = await TicketManager.readConfigFile();
             const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = config;
             const userName = interaction.user.username;
 
@@ -55,28 +55,16 @@ export class TicketManager {
             }
 
             const categoryConfig = ticketCategories[normalizedCategoryLabel];
-            const channel = await this.createChannel(
-                interaction,
-                userName,
-                categoryLabel,
-                supportRoles,
-                ticketCategoryId
-            );
-            const embed = this.createTicketEmbed(
-                client,
-                interaction,
-                userName,
-                categoryLabel,
-                categoryConfig.embedDescription
-            );
-            const closeButton = this.createCloseButton();
-            const claimButton = this.createClaimButton(enableClaimButton);
+            const channel = await TicketManager.createChannel(interaction, userName, categoryLabel, supportRoles, ticketCategoryId);
+            const embed = TicketManager.createTicketEmbed(client, interaction, userName, categoryLabel, categoryConfig.embedDescription);
+            const closeButton = TicketManager.createCloseButton();
+            const claimButton = TicketManager.createClaimButton(enableClaimButton);
 
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
             if (claimButton) {
                 row.addComponents(claimButton);
             }
-            const roleMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
+            const roleMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(', ');
             const messageContent = roleMentions;
 
             const message = await channel.send({
@@ -102,7 +90,7 @@ export class TicketManager {
         userName: string,
         categoryLabel: string,
         supportRoles: Snowflake[],
-        ticketCategoryId: Snowflake
+        ticketCategoryId: Snowflake,
     ): Promise<TextChannel> {
         const channelOptions: GuildChannelCreateOptions = {
             name: `ticket-${userName}`,
@@ -124,7 +112,7 @@ export class TicketManager {
                         PermissionFlagsBits.EmbedLinks,
                     ],
                 },
-                ...supportRoles.map(roleId => ({
+                ...supportRoles.map((roleId) => ({
                     id: roleId,
                     allow: [
                         PermissionFlagsBits.ViewChannel,
@@ -140,47 +128,35 @@ export class TicketManager {
         const channel = await interaction.guild.channels.create(channelOptions);
 
         if (!(channel instanceof TextChannel)) {
-            throw new Error(`Failed to create a text channel: Unexpected channel type`);
+            throw new Error('Failed to create a text channel: Unexpected channel type');
         }
 
         return channel;
     }
 
     private static createCloseButton(): ButtonBuilder {
-        return new ButtonBuilder()
-            .setCustomId('close-ticket')
-            .setLabel('Close')
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('🔒');
+        return new ButtonBuilder().setCustomId('close-ticket').setLabel('Close').setStyle(ButtonStyle.Danger).setEmoji('🔒');
     }
 
     private static createClaimButton(enableClaimButton: boolean): ButtonBuilder | null {
         if (!enableClaimButton) {
             return null;
         }
-        return new ButtonBuilder()
-            .setCustomId('claim-ticket')
-            .setLabel('Claim')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('🎫');
+        return new ButtonBuilder().setCustomId('claim-ticket').setLabel('Claim').setStyle(ButtonStyle.Primary).setEmoji('🎫');
     }
 
     public static createTicketEmbed(
-        client: Bot,
+        _client: Bot,
         interaction: CommandInteraction | ButtonInteraction,
         userName: string,
         categoryLabel: string,
-        embedDescription: string
+        embedDescription: string,
     ): EmbedBuilder {
         const userAvatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 1024 });
 
-        const embed = client
-            .embed()
+        const embed = new EmbedBuilder()
             .setThumbnail(userAvatarURL)
-            .setAuthor({
-                name: categoryLabel,
-                iconURL: userAvatarURL,
-            })
+            .setTitle(categoryLabel)
             .setDescription(embedDescription)
             .setColor('#00ff00')
             .setFooter({
