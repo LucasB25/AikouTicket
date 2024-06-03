@@ -254,9 +254,16 @@ export default class InteractionCreate extends Event {
             return;
         }
 
+        const transcriptsButton = new ButtonBuilder()
+            .setCustomId('transcripts-ticket')
+            .setLabel('Transcripts')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('📝')
+            .setDisabled(!isSupport);
+
         const confirmationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder().setCustomId('confirm-close-ticket').setLabel('Confirm').setStyle(ButtonStyle.Danger).setEmoji('⛔'),
-            new ButtonBuilder().setCustomId('transcripts-ticket').setLabel('Transcripts').setStyle(ButtonStyle.Primary).setEmoji('📝'),
+            transcriptsButton,
         );
 
         const embed = new EmbedBuilder()
@@ -273,22 +280,41 @@ export default class InteractionCreate extends Event {
 
         let shouldDeleteMessage = true;
 
-        setTimeout(async () => {
-            if (shouldDeleteMessage) {
-                await message.delete().catch((error) => this.client.logger.error('Failed to delete message:', error));
-            }
-        }, 60000);
-
         const filter = (i: MessageComponentInteraction): boolean => i.customId === 'confirm-close-ticket';
         const collector = interaction.channel.createMessageComponentCollector({
             filter,
             time: 60000,
         });
 
-        collector.on('collect', async () => {
-            shouldDeleteMessage = false;
-            collector.stop();
+        collector.on('collect', async (i) => {
+            if (i.customId === 'confirm-close-ticket') {
+                shouldDeleteMessage = false;
+                collector.stop();
+                await message.delete().catch((error) => this.client.logger.error('Failed to delete message:', error));
+            }
         });
+
+        const transcriptsFilter = (i: MessageComponentInteraction): boolean => i.customId === 'transcripts-ticket';
+        const transcriptsCollector = interaction.channel.createMessageComponentCollector({
+            filter: transcriptsFilter,
+            time: 0,
+        });
+
+        transcriptsCollector.on('collect', async (i) => {
+            if (i.customId === 'transcripts-ticket') {
+                shouldDeleteMessage = false;
+                transcriptsCollector.stop();
+                await message.delete().catch((error) => this.client.logger.error('Failed to delete message:', error));
+            }
+        });
+
+        setTimeout(async () => {
+            collector.stop();
+            transcriptsCollector.stop();
+            if (shouldDeleteMessage) {
+                await message.delete().catch((error) => this.client.logger.error('Failed to delete message:', error));
+            }
+        }, 60000);
     }
 
     private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
@@ -297,22 +323,59 @@ export default class InteractionCreate extends Event {
         const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
         const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
 
-        const embed = new EmbedBuilder().setColor(this.client.color).setDescription('Ticket will be closed in 10 seconds.');
+        const embed = new EmbedBuilder()
+            .setColor(this.client.color)
+            .setDescription('Please provide a reason for closing the ticket within 1 minute.');
 
         await interaction.reply({
             embeds: [embed],
-            ephemeral: false,
+            ephemeral: true,
         });
 
-        setTimeout(async () => {
-            try {
-                await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel);
+        let shouldCloseTicket = false;
+        let reason = '';
 
-                await channel.delete('Ticket closed by user.');
+        const collector = channel.createMessageCollector({
+            filter: (msg) => msg.author.id === interaction.user.id,
+            time: 60000,
+            max: 1,
+        });
+
+        collector.on('collect', async (message) => {
+            shouldCloseTicket = true;
+
+            try {
+                reason = message.content;
+                await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
             } catch (error) {
-                this.client.logger.error('Failed to delete channel:', error);
+                this.client.logger.error('Failed to log ticket deletion:', error);
             }
-        }, 10000);
+        });
+
+        collector.on('end', async () => {
+            if (!shouldCloseTicket) {
+                const embed = new EmbedBuilder()
+                    .setColor(this.client.color)
+                    .setDescription('Failed to close the ticket. Reason not provided within 1 minute.');
+
+                await interaction.followUp({ embeds: [embed], ephemeral: true });
+                return;
+            }
+
+            const announcementEmbed = new EmbedBuilder()
+                .setColor(this.client.color)
+                .setDescription('This ticket will be closed in 10 seconds.');
+
+            await interaction.followUp({ embeds: [announcementEmbed], ephemeral: true });
+
+            setTimeout(async () => {
+                try {
+                    await channel.delete(`Ticket closed by user with reason: ${reason}`);
+                } catch (error) {
+                    this.client.logger.error('Failed to delete channel:', error);
+                }
+            }, 10000);
+        });
     }
 
     private async handleTranscriptTicketButton(interaction: any): Promise<void> {

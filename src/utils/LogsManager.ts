@@ -43,6 +43,7 @@ export class LogsManager {
         userName: string,
         categoryLabel: string,
         ticketChannel: GuildChannel,
+        reason: string,
     ): Promise<void> {
         const config = await LogsManager.readConfigFile();
         const logChannel = await LogsManager.getLogChannel(client);
@@ -56,7 +57,7 @@ export class LogsManager {
                 interaction.user.username
             }\n\n- **Ticket:** \n> ${ticketChannel.toString()} \n> (${ticketChannel.name} - ID: ${
                 ticketChannel.id
-            }) \n\n- **Category:** \n> ${categoryLabel}`,
+            }) \n\n- **Category:** \n> ${categoryLabel}\n\n- **Reason:** \n> ${reason}`,
         );
 
         if (config.enableTranscripts) {
