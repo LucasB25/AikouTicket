@@ -120,7 +120,7 @@ export default class InteractionCreate extends Event {
         const config = await TicketManager.readConfigFile();
         const supportRoles = config.supportRoles;
 
-        const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        const memberRoles = interaction.member.roles.cache.map((role) => role.id);
         const isSupport = memberRoles.some((role) => supportRoles.includes(role));
 
         if (!isSupport) {
@@ -132,7 +132,6 @@ export default class InteractionCreate extends Event {
         }
 
         const userName = interaction.user.username;
-
         const embed = new EmbedBuilder()
             .setColor('#00FF00')
             .setTitle('Ticket Claimed')
@@ -148,48 +147,14 @@ export default class InteractionCreate extends Event {
             ephemeral: false,
         });
 
-        const components = interaction.message.components[0].components;
-        const claimButtonIndex = components.findIndex((component) => component.customId === 'claim-ticket');
-
-        if (claimButtonIndex !== -1) {
-            components[claimButtonIndex] = new ButtonBuilder()
-                .setCustomId('claim-ticket')
-                .setLabel('Claimed')
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true)
-                .setEmoji('🎫');
-
-            const unclaimButton = new ButtonBuilder()
-                .setCustomId('unclaim-ticket')
-                .setLabel('Unclaim')
-                .setStyle(ButtonStyle.Danger)
-                .setEmoji('⚠️');
-
-            components.push(unclaimButton);
-        }
-
-        const embeds = interaction.message.embeds;
-        if (embeds.length > 0) {
-            const existingEmbed = embeds[0];
-            const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(
-                `${existingEmbed.description}\n\n> **Claimed by**: ${userName}`,
-            );
-            interaction.message.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
-                embeds: [updatedEmbed],
-            });
-        } else {
-            await interaction.message.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
-            });
-        }
+        await this.updateClaimButton(interaction, userName, 'claimed');
     }
 
     private async handleUnclaimTicketButton(interaction: any): Promise<void> {
         const config = await TicketManager.readConfigFile();
         const supportRoles = config.supportRoles;
 
-        const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
+        const memberRoles = interaction.member.roles.cache.map((role) => role.id);
         const isSupport = memberRoles.some((role) => supportRoles.includes(role));
 
         if (!isSupport) {
@@ -200,37 +165,7 @@ export default class InteractionCreate extends Event {
             return;
         }
 
-        const components = interaction.message.components[0].components;
-        const claimButtonIndex = components.findIndex((component) => component.customId === 'claim-ticket');
-
-        if (claimButtonIndex !== -1) {
-            components[claimButtonIndex] = new ButtonBuilder()
-                .setCustomId('claim-ticket')
-                .setLabel('Claim')
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('🎫');
-        }
-
-        const unclaimButtonIndex = components.findIndex((component) => component.customId === 'unclaim-ticket');
-
-        if (unclaimButtonIndex !== -1) {
-            components.splice(unclaimButtonIndex, 1);
-        }
-        const userName = interaction.user.username;
-        const embeds = interaction.message.embeds;
-        if (embeds.length > 0) {
-            const existingEmbed = embeds[0];
-            const updatedDescription = existingEmbed.description.replace(`\n\n> **Claimed by**: ${userName}`, '');
-            const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(updatedDescription);
-            interaction.message.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
-                embeds: [updatedEmbed],
-            });
-        } else {
-            await interaction.message.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
-            });
-        }
+        await this.updateClaimButton(interaction, interaction.user.username, 'unclaimed');
     }
 
     private async handleCloseTicketButton(interaction: any): Promise<void> {
@@ -239,18 +174,13 @@ export default class InteractionCreate extends Event {
         const closeTicketStaffOnly = config.closeTicketStaffOnly;
 
         const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        const isSupport = memberRoles.some((role) => supportRoles.includes(role));
+        const isSupport = memberRoles.some((role: any) => supportRoles.includes(role));
 
-        if (closeTicketStaffOnly) {
-            if (!isSupport) {
-                await interaction.reply({
-                    content: 'You do not have permission to close this ticket.',
-                    ephemeral: true,
-                });
-                return;
-            }
-        } else if (interaction.channel.topic?.includes(interaction.user.id)) {
-            await this.handleConfirmCloseTicketButton(interaction);
+        if (closeTicketStaffOnly && !isSupport) {
+            await interaction.reply({
+                content: 'You do not have permission to close this ticket.',
+                ephemeral: true,
+            });
             return;
         }
 
@@ -297,7 +227,7 @@ export default class InteractionCreate extends Event {
         const transcriptsFilter = (i: MessageComponentInteraction): boolean => i.customId === 'transcripts-ticket';
         const transcriptsCollector = interaction.channel.createMessageComponentCollector({
             filter: transcriptsFilter,
-            time: 0,
+            time: 60000,
         });
 
         transcriptsCollector.on('collect', async (i) => {
@@ -319,7 +249,6 @@ export default class InteractionCreate extends Event {
 
     private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
         const channel = interaction.channel as TextChannel;
-
         const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
         const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
 
@@ -343,13 +272,8 @@ export default class InteractionCreate extends Event {
 
         collector.on('collect', async (message) => {
             shouldCloseTicket = true;
-
-            try {
-                reason = message.content;
-                await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
-            } catch (error) {
-                this.client.logger.error('Failed to log ticket deletion:', error);
-            }
+            reason = message.content;
+            await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
         });
 
         collector.on('end', async () => {
@@ -427,6 +351,53 @@ export default class InteractionCreate extends Event {
                         .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
                         .setTimestamp(),
                 ],
+            });
+        }
+    }
+
+    private async updateClaimButton(interaction: any, userName: string, action: string): Promise<void> {
+        const components = interaction.message.components[0].components;
+        const claimButtonIndex = components.findIndex((component) => component.customId === 'claim-ticket');
+        const isClaimed = action === 'claimed';
+
+        if (claimButtonIndex !== -1) {
+            components[claimButtonIndex] = new ButtonBuilder()
+                .setCustomId('claim-ticket')
+                .setLabel(isClaimed ? 'Claimed' : 'Claim')
+                .setStyle(isClaimed ? ButtonStyle.Secondary : ButtonStyle.Primary)
+                .setDisabled(isClaimed)
+                .setEmoji('🎫');
+
+            if (isClaimed) {
+                const unclaimButton = new ButtonBuilder()
+                    .setCustomId('unclaim-ticket')
+                    .setLabel('Unclaim')
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji('⚠️');
+
+                components.push(unclaimButton);
+            } else {
+                const unclaimButtonIndex = components.findIndex((component) => component.customId === 'unclaim-ticket');
+                if (unclaimButtonIndex !== -1) {
+                    components.splice(unclaimButtonIndex, 1);
+                }
+            }
+        }
+
+        const embeds = interaction.message.embeds;
+        if (embeds.length > 0) {
+            const existingEmbed = embeds[0];
+            const updatedDescription = isClaimed
+                ? `${existingEmbed.description}\n\n> **Claimed by**: ${userName}`
+                : existingEmbed.description.replace(`\n\n> **Claimed by**: ${userName}`, '');
+            const updatedEmbed = new EmbedBuilder(existingEmbed).setDescription(updatedDescription);
+            await interaction.message.edit({
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
+                embeds: [updatedEmbed],
+            });
+        } else {
+            await interaction.message.edit({
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(components)],
             });
         }
     }
