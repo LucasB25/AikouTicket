@@ -276,6 +276,9 @@ export default class InteractionCreate extends Event {
                 shouldCloseTicket = true;
                 reason = message.content;
                 await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
+                if (config.notifyTicketCreator) {
+                    await this.notifyTicketCreator(interaction, interaction.user, reason);
+                }
             });
 
             collector.on('end', async () => {
@@ -305,6 +308,9 @@ export default class InteractionCreate extends Event {
         } else {
             const reason = 'No reason provided';
             await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
+            if (config.notifyTicketCreator) {
+                await this.notifyTicketCreator(interaction, interaction.user, reason);
+            }
 
             const announcementEmbed = new EmbedBuilder()
                 .setColor(this.client.color)
@@ -322,6 +328,22 @@ export default class InteractionCreate extends Event {
                     this.client.logger.error('Failed to delete channel:', error);
                 }
             }, 10000);
+        }
+    }
+
+    private async notifyTicketCreator(interaction: any, user: any, reason: string | null): Promise<void> {
+        try {
+            const reasonText = reason ? `\n\n**Reason:** ${reason}` : '';
+            const embed = new EmbedBuilder()
+                .setColor('#FF2400')
+                .setTitle('Ticket Closed')
+                .setDescription(`Your ticket has been closed.${reasonText}`)
+                .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
+                .setTimestamp();
+
+            await user.send({ embeds: [embed] });
+        } catch (error) {
+            this.client.logger.error('Failed to send DM to ticket creator:', error);
         }
     }
 

@@ -25,6 +25,7 @@ interface Config {
     enableClaimButton: boolean;
     closeTicketStaffOnly: boolean;
     enableTicketReason: boolean;
+    notifyTicketCreator: boolean;
     ticketCategories: {
         [key: string]: {
             menuLabel: string;
