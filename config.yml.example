@@ -2,27 +2,31 @@
 # Ticket Bot General Settings
 # ==============================================
 
-maxActiveTicketsPerUser: 1 # Maximum number of active tickets allowed per user
-menuPlaceholder: 'Select a category to open a ticket.' # The placeholder text for the select menu
+maxActiveTicketsPerUser: 1  # Maximum number of active tickets allowed per user
+menuPlaceholder: 'Select a category to open a ticket.'  # Placeholder text for the select menu
 
 # Roles with access to ticket channels
 supportRoles:
-    - '111111111111111111' # Support role ID 1
-    - '111111111111111111' # Support role ID 2
-closeTicketStaffOnly: true # Allow only staff members with specified roles to close tickets
+    - '111111111111111111'  # Support role ID 1
+    - '111111111111111111'  # Support role ID 2
 
-logChannelId: '111111111111111111' # ID of the channel where ticket logs will be sent
-transcriptLogsChannelId: '111111111111111111' # ID of the channel where ticket transcript logs will be sent
-ticketCategoryId: '111111111111111111' # ID of the category under which ticket channels will be created
-enableTranscripts: true # Enable or disable the creation and sending of ticket transcripts
-enableClaimButton: true # Enable or disable the claim button for tickets
+closeTicketStaffOnly: false  # Allow only staff members with specified roles to close tickets
+
+logChannelId: '111111111111111111'  # ID of the channel where ticket logs will be sent
+transcriptLogsChannelId: '111111111111111111'  # ID of the channel where ticket transcript logs will be sent
+ticketCategoryId: '111111111111111111'  # ID of the category under which ticket channels will be created
+enableTranscripts: true  # Enable or disable the creation and sending of ticket transcripts
+enableClaimButton: true  # Enable or disable the claim button for tickets
+enableTicketReason: true  # Enable or disable the requirement for a reason when closing tickets
 
 # ================================
 # Ticket Category Settings
 # ================================
 # Define different categories of tickets here.
 # Each category should have a unique identifier.
-# The Discord limit is 25, but it's not advisable to use that many types, as each type consumes 2 categories, and Discord's maximum is 50. Using too many types could exhaust your category options for regular Discord channels...
+# Note: The Discord limit is 25 select menu options, but it's not advisable to use that many.
+# Each type consumes 2 categories, and Discord's maximum is 50. 
+# Using too many types could exhaust your category options for regular Discord channels.
 
 ticketCategories:
     # Category 1

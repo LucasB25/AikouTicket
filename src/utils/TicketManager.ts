@@ -24,6 +24,7 @@ interface Config {
     menuPlaceholder: string;
     enableClaimButton: boolean;
     closeTicketStaffOnly: boolean;
+    enableTicketReason: boolean;
     ticketCategories: {
         [key: string]: {
             menuLabel: string;

@@ -248,49 +248,72 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
+        const config = await TicketManager.readConfigFile();
         const channel = interaction.channel as TextChannel;
         const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
         const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
 
-        const embed = new EmbedBuilder()
-            .setColor(this.client.color)
-            .setDescription('Please provide a reason for closing the ticket within 1 minute.');
+        if (config.enableTicketReason) {
+            const embed = new EmbedBuilder()
+                .setColor(this.client.color)
+                .setDescription('Please provide a reason for closing the ticket within 1 minute.');
 
-        await interaction.reply({
-            embeds: [embed],
-            ephemeral: true,
-        });
+            await interaction.reply({
+                embeds: [embed],
+                ephemeral: true,
+            });
 
-        let shouldCloseTicket = false;
-        let reason = '';
+            let shouldCloseTicket = false;
+            let reason = '';
 
-        const collector = channel.createMessageCollector({
-            filter: (msg) => msg.author.id === interaction.user.id,
-            time: 60000,
-            max: 1,
-        });
+            const collector = channel.createMessageCollector({
+                filter: (msg) => msg.author.id === interaction.user.id,
+                time: 60000,
+                max: 1,
+            });
 
-        collector.on('collect', async (message) => {
-            shouldCloseTicket = true;
-            reason = message.content;
-            await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
-        });
+            collector.on('collect', async (message) => {
+                shouldCloseTicket = true;
+                reason = message.content;
+                await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
+            });
 
-        collector.on('end', async () => {
-            if (!shouldCloseTicket) {
-                const embed = new EmbedBuilder()
+            collector.on('end', async () => {
+                if (!shouldCloseTicket) {
+                    const embed = new EmbedBuilder()
+                        .setColor(this.client.color)
+                        .setDescription('Failed to close the ticket. Reason not provided within 1 minute.');
+
+                    await interaction.followUp({ embeds: [embed], ephemeral: true });
+                    return;
+                }
+
+                const announcementEmbed = new EmbedBuilder()
                     .setColor(this.client.color)
-                    .setDescription('Failed to close the ticket. Reason not provided within 1 minute.');
+                    .setDescription('This ticket will be closed in 10 seconds.');
 
-                await interaction.followUp({ embeds: [embed], ephemeral: true });
-                return;
-            }
+                await interaction.followUp({ embeds: [announcementEmbed], ephemeral: true });
+
+                setTimeout(async () => {
+                    try {
+                        await channel.delete(`Ticket closed by user with reason: ${reason}`);
+                    } catch (error) {
+                        this.client.logger.error('Failed to delete channel:', error);
+                    }
+                }, 10000);
+            });
+        } else {
+            const reason = 'No reason provided';
+            await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
 
             const announcementEmbed = new EmbedBuilder()
                 .setColor(this.client.color)
                 .setDescription('This ticket will be closed in 10 seconds.');
 
-            await interaction.followUp({ embeds: [announcementEmbed], ephemeral: true });
+            await interaction.reply({
+                embeds: [announcementEmbed],
+                ephemeral: true,
+            });
 
             setTimeout(async () => {
                 try {
@@ -299,7 +322,7 @@ export default class InteractionCreate extends Event {
                     this.client.logger.error('Failed to delete channel:', error);
                 }
             }, 10000);
-        });
+        }
     }
 
     private async handleTranscriptTicketButton(interaction: any): Promise<void> {
