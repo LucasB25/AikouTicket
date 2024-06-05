@@ -18,6 +18,7 @@ ticketCategoryId: '111111111111111111'  # ID of the category under which ticket 
 enableTranscripts: true  # Enable or disable the creation and sending of ticket transcripts
 enableClaimButton: true  # Enable or disable the claim button for tickets
 enableTicketReason: true  # Enable or disable the requirement for a reason when closing tickets
+notifyTicketCreator: true # Enable or disable notifying the ticket creator when a ticket is closed
 
 # ================================
 # Ticket Category Settings
