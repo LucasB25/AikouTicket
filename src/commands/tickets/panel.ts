@@ -33,7 +33,9 @@ export default class PanelCommand extends Command {
         await ctx.sendDeferMessage({ ephemeral: true });
         const config = await TicketManager.readConfigFile();
 
-        const panelEmbed = this.createPanelEmbed(client);
+        const panelEmbedConfig = config.embeds.panelEmbed;
+        const panelEmbed = this.createPanelEmbed(client, panelEmbedConfig);
+
         const selectMenu = this.createSelectMenu(config.ticketCategories, config.menuPlaceholder);
 
         const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
@@ -51,16 +53,10 @@ export default class PanelCommand extends Command {
         }
     }
 
-    createPanelEmbed(client: Bot): EmbedBuilder {
-        return client
-            .embed()
-            .setColor(this.client.color)
-            .setTitle('AikouTicket')
-            .setDescription('To create a support ticket, please select one of the options below based on the assistance you require.')
-            .setImage(
-                'https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&',
-            )
-            .setTimestamp();
+    createPanelEmbed(_client: Bot, panelEmbedConfig: any): EmbedBuilder {
+        const embed = TicketManager.buildEmbed(panelEmbedConfig);
+
+        return embed;
     }
 
     createSelectMenu(ticketCategories: any, placeholder: string): StringSelectMenuBuilder {

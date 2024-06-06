@@ -64,7 +64,29 @@ ticketCategories:
         menuDescription: 'For billing-related inquiries and payment issues.'
         # Emoji associated with this category (leave empty if none)
         menuEmoji: '💳'
-
+        
         # ================================
         # Embed description for this category
         embedDescription: 'Welcome to Category 3! Have any questions or issues regarding billing or payments? Let us know.'
+
+# ==============================================
+# Embeds Locale
+# ==============================================
+
+embeds:
+  #PanelEMbed
+  panelEmbed:
+      color: "#0099FF"
+      title: "AikouTicket"
+      description: "To create a support ticket, please select one of the options below based on the assistance you require."
+      timestamp: true
+      URL: ""
+      image: "https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&"
+      thumbnail: ""
+      footer:
+        text: "AikouTicket"
+        iconURL: ""
+      author:
+        name: ""
+        iconURL: ""
+        url: ""

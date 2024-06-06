@@ -34,6 +34,26 @@ interface Config {
             embedDescription: string;
         };
     };
+    embeds: {
+        [key: string]: {
+            color: number;
+            title: string;
+            description: string;
+            timestamp: boolean;
+            URL: string;
+            image: string;
+            thumbnail: string;
+            footer: {
+                text: string;
+                iconURL: string;
+            };
+            author: {
+                name: string;
+                iconURL: string;
+                url: string;
+            };
+        };
+    };
 }
 
 export class TicketManager {
@@ -79,6 +99,8 @@ export class TicketManager {
             await message.channel.bulkDelete(1);
 
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
+
+            await client.db.saveTicketInfo(channel.id, userName);
 
             return channel;
         } catch (error) {
@@ -166,6 +188,63 @@ export class TicketManager {
                 iconURL: userAvatarURL,
             })
             .setTimestamp();
+
+        return embed;
+    }
+
+    public static buildEmbed(embedConfig: any): EmbedBuilder {
+        const embed = new EmbedBuilder();
+
+        if (embedConfig.color) {
+            embed.setColor(embedConfig.color);
+        }
+
+        if (embedConfig.title) {
+            embed.setTitle(embedConfig.title);
+        }
+
+        if (embedConfig.description) {
+            embed.setDescription(embedConfig.description);
+        }
+
+        if (embedConfig.timestamp) {
+            embed.setTimestamp();
+        }
+
+        if (embedConfig.URL) {
+            embed.setURL(embedConfig.URL);
+        }
+
+        if (embedConfig.image) {
+            embed.setImage(embedConfig.image);
+        }
+
+        if (embedConfig.thumbnail) {
+            embed.setThumbnail(embedConfig.thumbnail);
+        }
+
+        if (embedConfig?.footer?.text !== '' && embedConfig?.footer?.text !== null) {
+            const footerValues = {
+                text: embedConfig?.footer?.text || undefined,
+                iconURL:
+                    embedConfig?.footer?.iconURL !== '' && embedConfig?.footer?.iconURL !== null
+                        ? embedConfig?.footer?.iconURL || undefined
+                        : undefined,
+            };
+            embed.setFooter(footerValues);
+        }
+
+        if (embedConfig?.author?.name !== '' && embedConfig?.author?.name !== null) {
+            const authorValues = {
+                name: embedConfig?.author?.name || undefined,
+                iconURL:
+                    embedConfig?.author?.iconURL !== '' && embedConfig?.author?.iconURL !== null
+                        ? embedConfig?.author?.iconURL || undefined
+                        : undefined,
+                url: embedConfig?.author?.url || undefined,
+            };
+            embed.setAuthor(authorValues);
+        }
 
         return embed;
     }

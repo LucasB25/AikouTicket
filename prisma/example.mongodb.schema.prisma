@@ -14,7 +14,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model tickets {
+model ticketsGuild {
   guildId               String      @id @map("_id")
   selectMenuOptions     String
+}
+
+model ticketsInfo {
+  id                    String      @id @default(cuid()) @map("_id")
+  channelid             String      @unique
+  creator               String
+  createdAt             BigInt
 }

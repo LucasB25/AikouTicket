@@ -278,8 +278,17 @@ export default class InteractionCreate extends Event {
                 shouldCloseTicket = true;
                 reason = message.content;
                 await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
-                if (config.notifyTicketCreator) {
-                    await this.notifyTicketCreator(interaction, interaction.user, reason, ticketChannel);
+
+                const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
+                if (ticket) {
+                    const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
+                    if (creator) {
+                        await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
+                    } else {
+                        this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
+                    }
+                } else {
+                    this.client.logger.error(`Failed to find ticket information for ${ticketChannel.id}.`);
                 }
             });
 
@@ -302,6 +311,8 @@ export default class InteractionCreate extends Event {
                 setTimeout(async () => {
                     try {
                         await channel.delete(`Ticket closed by user with reason: ${reason}`);
+
+                        await this.client.db.deleteTicketInfo(channel.id);
                     } catch (error) {
                         this.client.logger.error('Failed to delete channel:', error);
                     }
@@ -310,8 +321,16 @@ export default class InteractionCreate extends Event {
         } else {
             const reason = 'No reason provided';
             await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
-            if (config.notifyTicketCreator) {
-                await this.notifyTicketCreator(interaction, interaction.user, reason, ticketChannel);
+            const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
+            if (ticket) {
+                const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
+                if (creator) {
+                    await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
+                } else {
+                    this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
+                }
+            } else {
+                this.client.logger.error(`Failed to find ticket information for ${ticketChannel.id}.`);
             }
 
             const announcementEmbed = new EmbedBuilder()
@@ -326,6 +345,8 @@ export default class InteractionCreate extends Event {
             setTimeout(async () => {
                 try {
                     await channel.delete(`Ticket closed by user with reason: ${reason}`);
+
+                    await this.client.db.deleteTicketInfo(channel.id);
                 } catch (error) {
                     this.client.logger.error('Failed to delete channel:', error);
                 }
@@ -335,14 +356,15 @@ export default class InteractionCreate extends Event {
 
     private async notifyTicketCreator(interaction: any, user: any, reason: string | null, ticketChannel: TextChannel): Promise<void> {
         try {
+            const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
             const reasonText = reason ? `\n\n**Reason:** ${reason}` : '';
-
             const serverName = interaction.guild.name;
-
             const ticketName = ticketChannel.name;
-
             const categoryLabelMatch = ticketChannel.topic?.match(/Ticket Type: (.+)/);
             const ticketCategory = categoryLabelMatch ? categoryLabelMatch[1] : 'Unknown';
+            const createDat = new Date(Number(ticket.createdAt)).toLocaleString();
+            const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
+            const creatorName = creator ? creator.user.username : ticket.creator;
 
             const embed = new EmbedBuilder()
                 .setColor('#FF2400')
@@ -352,7 +374,9 @@ export default class InteractionCreate extends Event {
                     { name: 'Server', value: `> ${serverName}`, inline: true },
                     { name: 'Ticket', value: `> #${ticketName}`, inline: true },
                     { name: 'Category', value: `> ${ticketCategory}`, inline: true },
+                    { name: 'Ticket Author', value: `> ${creatorName}`, inline: true },
                     { name: 'Closed By', value: `> ${interaction.user.username}`, inline: true },
+                    { name: 'Ticket Creation Time', value: `> ${createDat}`, inline: true },
                 )
                 .setThumbnail(interaction.guild.iconURL({ format: 'png', size: 1024 }))
                 .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
