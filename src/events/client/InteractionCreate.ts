@@ -253,6 +253,8 @@ export default class InteractionCreate extends Event {
         const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
         const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
 
+        const ticketChannel = interaction.channel as TextChannel;
+
         if (config.enableTicketReason) {
             const embed = new EmbedBuilder()
                 .setColor(this.client.color)
@@ -277,7 +279,7 @@ export default class InteractionCreate extends Event {
                 reason = message.content;
                 await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
                 if (config.notifyTicketCreator) {
-                    await this.notifyTicketCreator(interaction, interaction.user, reason);
+                    await this.notifyTicketCreator(interaction, interaction.user, reason, ticketChannel);
                 }
             });
 
@@ -309,7 +311,7 @@ export default class InteractionCreate extends Event {
             const reason = 'No reason provided';
             await LogsManager.logTicketDeletion(interaction, this.client, interaction.user.username, categoryLabel, channel, reason);
             if (config.notifyTicketCreator) {
-                await this.notifyTicketCreator(interaction, interaction.user, reason);
+                await this.notifyTicketCreator(interaction, interaction.user, reason, ticketChannel);
             }
 
             const announcementEmbed = new EmbedBuilder()
@@ -331,13 +333,28 @@ export default class InteractionCreate extends Event {
         }
     }
 
-    private async notifyTicketCreator(interaction: any, user: any, reason: string | null): Promise<void> {
+    private async notifyTicketCreator(interaction: any, user: any, reason: string | null, ticketChannel: TextChannel): Promise<void> {
         try {
             const reasonText = reason ? `\n\n**Reason:** ${reason}` : '';
+
+            const serverName = interaction.guild.name;
+
+            const ticketName = ticketChannel.name;
+
+            const categoryLabelMatch = ticketChannel.topic?.match(/Ticket Type: (.+)/);
+            const ticketCategory = categoryLabelMatch ? categoryLabelMatch[1] : 'Unknown';
+
             const embed = new EmbedBuilder()
                 .setColor('#FF2400')
                 .setTitle('Ticket Closed')
                 .setDescription(`Your ticket has been closed.${reasonText}`)
+                .addFields(
+                    { name: 'Server', value: `> ${serverName}`, inline: true },
+                    { name: 'Ticket', value: `> #${ticketName}`, inline: true },
+                    { name: 'Category', value: `> ${ticketCategory}`, inline: true },
+                    { name: 'Closed By', value: `> ${interaction.user.username}`, inline: true },
+                )
+                .setThumbnail(interaction.guild.iconURL({ format: 'png', size: 1024 }))
                 .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
                 .setTimestamp();
 
