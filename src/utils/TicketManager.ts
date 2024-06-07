@@ -26,6 +26,9 @@ interface Config {
     closeTicketStaffOnly: boolean;
     enableTicketReason: boolean;
     notifyTicketCreator: boolean;
+    logChannelId: Snowflake;
+    enableTranscripts: boolean;
+    transcriptLogsChannelId: Snowflake;
     ticketCategories: {
         [key: string]: {
             menuLabel: string;
@@ -63,43 +66,27 @@ export class TicketManager {
         client: Bot,
     ): Promise<TextChannel | null> {
         try {
-            if (!categoryLabel) {
-                throw new Error('Category label is undefined.');
-            }
-
             const config = await TicketManager.readConfigFile();
             const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = config;
             const userName = interaction.user.username;
 
             const normalizedCategoryLabel = categoryLabel.toLowerCase();
-            if (!(normalizedCategoryLabel in ticketCategories)) {
-                throw new Error(`Category "${categoryLabel}" not found in config.`);
-            }
-
             const categoryConfig = ticketCategories[normalizedCategoryLabel];
+            if (!categoryConfig) throw new Error(`Category "${categoryLabel}" not found in config.`);
+
             const channel = await TicketManager.createChannel(interaction, userName, categoryLabel, supportRoles, ticketCategoryId);
             const embed = TicketManager.createTicketEmbed(client, interaction, userName, categoryLabel, categoryConfig.embedDescription);
             const closeButton = TicketManager.createCloseButton();
             const claimButton = TicketManager.createClaimButton(enableClaimButton);
 
-            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
-            if (claimButton) {
-                row.addComponents(claimButton);
-            }
-            const roleMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(', ');
-            const messageContent = roleMentions;
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton, ...(claimButton ? [claimButton] : []));
+            const messageContent = supportRoles.map((roleId) => `<@&${roleId}>`).join(', ');
 
-            const message = await channel.send({
-                content: messageContent,
-                embeds: [embed],
-                components: [row],
-            });
-
+            const message = await channel.send({ content: messageContent, embeds: [embed], components: [row] });
             await message.pin();
             await message.channel.bulkDelete(1);
 
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
-
             await client.db.saveTicketInfo(channel.id, userName);
 
             return channel;
@@ -163,13 +150,11 @@ export class TicketManager {
     }
 
     private static createClaimButton(enableClaimButton: boolean): ButtonBuilder | null {
-        if (!enableClaimButton) {
-            return null;
-        }
+        if (!enableClaimButton) return null;
         return new ButtonBuilder().setCustomId('claim-ticket').setLabel('Claim').setStyle(ButtonStyle.Primary).setEmoji('🎫');
     }
 
-    public static createTicketEmbed(
+    private static createTicketEmbed(
         _client: Bot,
         interaction: CommandInteraction | ButtonInteraction,
         userName: string,
@@ -178,72 +163,39 @@ export class TicketManager {
     ): EmbedBuilder {
         const userAvatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 1024 });
 
-        const embed = new EmbedBuilder()
+        return new EmbedBuilder()
             .setThumbnail(userAvatarURL)
             .setTitle(categoryLabel)
             .setDescription(embedDescription)
             .setColor('#00ff00')
-            .setFooter({
-                text: `Ticket created by ${userName}`,
-                iconURL: userAvatarURL,
-            })
+            .setFooter({ text: `Ticket created by ${userName}`, iconURL: userAvatarURL })
             .setTimestamp();
-
-        return embed;
     }
 
     public static buildEmbed(embedConfig: any): EmbedBuilder {
         const embed = new EmbedBuilder();
 
-        if (embedConfig.color) {
-            embed.setColor(embedConfig.color);
+        if (embedConfig.color) embed.setColor(embedConfig.color);
+        if (embedConfig.title) embed.setTitle(embedConfig.title);
+        if (embedConfig.description) embed.setDescription(embedConfig.description);
+        if (embedConfig.timestamp) embed.setTimestamp();
+        if (embedConfig.URL) embed.setURL(embedConfig.URL);
+        if (embedConfig.image) embed.setImage(embedConfig.image);
+        if (embedConfig.thumbnail) embed.setThumbnail(embedConfig.thumbnail);
+
+        if (embedConfig?.footer?.text) {
+            embed.setFooter({
+                text: embedConfig.footer.text,
+                iconURL: embedConfig.footer.iconURL || undefined,
+            });
         }
 
-        if (embedConfig.title) {
-            embed.setTitle(embedConfig.title);
-        }
-
-        if (embedConfig.description) {
-            embed.setDescription(embedConfig.description);
-        }
-
-        if (embedConfig.timestamp) {
-            embed.setTimestamp();
-        }
-
-        if (embedConfig.URL) {
-            embed.setURL(embedConfig.URL);
-        }
-
-        if (embedConfig.image) {
-            embed.setImage(embedConfig.image);
-        }
-
-        if (embedConfig.thumbnail) {
-            embed.setThumbnail(embedConfig.thumbnail);
-        }
-
-        if (embedConfig?.footer?.text !== '' && embedConfig?.footer?.text !== null) {
-            const footerValues = {
-                text: embedConfig?.footer?.text || undefined,
-                iconURL:
-                    embedConfig?.footer?.iconURL !== '' && embedConfig?.footer?.iconURL !== null
-                        ? embedConfig?.footer?.iconURL || undefined
-                        : undefined,
-            };
-            embed.setFooter(footerValues);
-        }
-
-        if (embedConfig?.author?.name !== '' && embedConfig?.author?.name !== null) {
-            const authorValues = {
-                name: embedConfig?.author?.name || undefined,
-                iconURL:
-                    embedConfig?.author?.iconURL !== '' && embedConfig?.author?.iconURL !== null
-                        ? embedConfig?.author?.iconURL || undefined
-                        : undefined,
-                url: embedConfig?.author?.url || undefined,
-            };
-            embed.setAuthor(authorValues);
+        if (embedConfig?.author?.name) {
+            embed.setAuthor({
+                name: embedConfig.author.name,
+                iconURL: embedConfig.author.iconURL || undefined,
+                url: embedConfig.author.url || undefined,
+            });
         }
 
         return embed;

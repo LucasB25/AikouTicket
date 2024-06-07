@@ -389,10 +389,9 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleTranscriptTicketButton(interaction: any): Promise<void> {
-        const userName = interaction.user.username;
         const ticketChannel = interaction.channel;
 
-        await LogsManager.logTicketTranscript(interaction, this.client, userName, ticketChannel);
+        await LogsManager.logTicketTranscript(interaction, this.client, ticketChannel);
         const embed = new EmbedBuilder()
             .setColor(this.client.color)
             .setDescription('The transcript of the ticket has been generated and logged.');
