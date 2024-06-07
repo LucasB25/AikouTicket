@@ -104,7 +104,7 @@ export class TicketManager {
         ticketCategoryId: Snowflake,
     ): Promise<TextChannel> {
         const channelOptions: GuildChannelCreateOptions = {
-            name: `ticket-${userName}`,
+            name: `${categoryLabel}-${userName}`,
             type: ChannelType.GuildText,
             topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
             parent: ticketCategoryId,
@@ -199,6 +199,14 @@ export class TicketManager {
         }
 
         return embed;
+    }
+
+    public static async isUserSupport(interaction: any): Promise<boolean> {
+        const config = await TicketManager.readConfigFile();
+        const supportRoles = config.supportRoles;
+
+        const memberRoles = interaction.member.roles.cache.map((role) => role.id);
+        return memberRoles.some((role) => supportRoles.includes(role));
     }
 
     public static async readConfigFile(): Promise<Config> {

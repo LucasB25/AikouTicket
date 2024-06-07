@@ -58,7 +58,7 @@ export default class InteractionCreate extends Event {
         await interaction.deferReply({ ephemeral: true });
 
         try {
-            const config = await TicketManager.readConfigFile();
+            const { menuPlaceholder, maxActiveTicketsPerUser } = await TicketManager.readConfigFile();
             const selectMenuOptions = await this.client.db.get(interaction.guild.id);
 
             if (!selectMenuOptions?.selectMenuOptions) {
@@ -66,7 +66,7 @@ export default class InteractionCreate extends Event {
             }
 
             const parsedOptions = JSON.parse(selectMenuOptions.selectMenuOptions);
-            await this.updateSelectMenu(interaction, config.menuPlaceholder, parsedOptions);
+            await this.updateSelectMenu(interaction, menuPlaceholder, parsedOptions);
 
             const selectedOption = interaction.values[0];
             const category = parsedOptions.find((opt: any) => opt.value === selectedOption);
@@ -79,9 +79,9 @@ export default class InteractionCreate extends Event {
                 (channel) => channel.type === ChannelType.GuildText && channel.name.startsWith(`ticket-${interaction.user.username}`),
             );
 
-            if (userTickets.size >= config.maxActiveTicketsPerUser) {
+            if (userTickets.size >= maxActiveTicketsPerUser) {
                 await interaction.editReply({
-                    content: `You have reached the maximum limit of active tickets (${config.maxActiveTicketsPerUser}).`,
+                    content: `You have reached the maximum limit of active tickets (${maxActiveTicketsPerUser}).`,
                 });
                 return;
             }
@@ -117,11 +117,8 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleClaimTicketButton(interaction: any): Promise<void> {
-        const config = await TicketManager.readConfigFile();
-        const supportRoles = config.supportRoles;
-
-        const memberRoles = interaction.member.roles.cache.map((role) => role.id);
-        const isSupport = memberRoles.some((role) => supportRoles.includes(role));
+        const isSupport = await TicketManager.isUserSupport(interaction);
+        const userName = interaction.user.username;
 
         if (!isSupport) {
             await interaction.reply({
@@ -131,7 +128,6 @@ export default class InteractionCreate extends Event {
             return;
         }
 
-        const userName = interaction.user.username;
         const embed = new EmbedBuilder()
             .setColor('#00FF00')
             .setTitle('Ticket Claimed')
@@ -151,11 +147,7 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleUnclaimTicketButton(interaction: any): Promise<void> {
-        const config = await TicketManager.readConfigFile();
-        const supportRoles = config.supportRoles;
-
-        const memberRoles = interaction.member.roles.cache.map((role) => role.id);
-        const isSupport = memberRoles.some((role) => supportRoles.includes(role));
+        const isSupport = await TicketManager.isUserSupport(interaction);
 
         if (!isSupport) {
             await interaction.reply({
@@ -170,11 +162,8 @@ export default class InteractionCreate extends Event {
 
     private async handleCloseTicketButton(interaction: any): Promise<void> {
         const config = await TicketManager.readConfigFile();
-        const supportRoles = config.supportRoles;
         const closeTicketStaffOnly = config.closeTicketStaffOnly;
-
-        const memberRoles = interaction.member.roles.cache.map((role: any) => role.id);
-        const isSupport = memberRoles.some((role: any) => supportRoles.includes(role));
+        const isSupport = await TicketManager.isUserSupport(interaction);
 
         if (closeTicketStaffOnly && !isSupport) {
             await interaction.reply({
@@ -250,9 +239,7 @@ export default class InteractionCreate extends Event {
     private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
         const config = await TicketManager.readConfigFile();
         const channel = interaction.channel as TextChannel;
-        const categoryLabelMatch = channel.topic?.match(/Ticket Type: (.+)/);
-        const categoryLabel = categoryLabelMatch ? categoryLabelMatch[1] : 'unknown';
-
+        const categoryLabel = channel.topic?.match(/Ticket Type: (.+)/)?.[1] || 'unknown';
         const ticketChannel = interaction.channel as TextChannel;
 
         if (config.enableTicketReason) {
@@ -358,11 +345,7 @@ export default class InteractionCreate extends Event {
         try {
             const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
             const reasonText = reason ? `\n\n**Reason:** ${reason}` : '';
-            const serverName = interaction.guild.name;
-            const ticketName = ticketChannel.name;
-            const categoryLabelMatch = ticketChannel.topic?.match(/Ticket Type: (.+)/);
-            const ticketCategory = categoryLabelMatch ? categoryLabelMatch[1] : 'Unknown';
-            const createDat = new Date(Number(ticket.createdAt)).toLocaleString();
+            const { guild } = ticketChannel;
             const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
             const creatorName = creator ? creator.user.username : ticket.creator;
 
@@ -371,12 +354,12 @@ export default class InteractionCreate extends Event {
                 .setTitle('Ticket Closed')
                 .setDescription(`Your ticket has been closed.${reasonText}`)
                 .addFields(
-                    { name: 'Server', value: `> ${serverName}`, inline: true },
-                    { name: 'Ticket', value: `> #${ticketName}`, inline: true },
-                    { name: 'Category', value: `> ${ticketCategory}`, inline: true },
+                    { name: 'Server', value: `> ${guild.name}`, inline: true },
+                    { name: 'Ticket', value: `> #${ticketChannel.name}`, inline: true },
+                    { name: 'Category', value: `> ${ticketChannel.topic?.match(/Ticket Type: (.+)/)?.[1] || 'Unknown'}`, inline: true },
                     { name: 'Ticket Author', value: `> ${creatorName}`, inline: true },
                     { name: 'Closed By', value: `> ${interaction.user.username}`, inline: true },
-                    { name: 'Ticket Creation Time', value: `> ${createDat}`, inline: true },
+                    { name: 'Ticket Creation Time', value: `> ${new Date(Number(ticket.createdAt)).toLocaleString()}`, inline: true },
                 )
                 .setThumbnail(interaction.guild.iconURL({ format: 'png', size: 1024 }))
                 .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
