@@ -269,9 +269,9 @@ export default class InteractionCreate extends Event {
                 const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
                 if (ticket) {
                     const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
-                    if (creator) {
+                    if (config.enableNotifyTicketCreator && creator) {
                         await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
-                    } else {
+                    } else if (!creator) {
                         this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
                     }
                 } else {
@@ -311,9 +311,9 @@ export default class InteractionCreate extends Event {
             const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
             if (ticket) {
                 const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
-                if (creator) {
+                if (config.enableNotifyTicketCreator && creator) {
                     await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
-                } else {
+                } else if (!creator) {
                     this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
                 }
             } else {

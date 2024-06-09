@@ -24,4 +24,6 @@ model ticketsInfo {
   channelid             String      @unique
   creator               String
   createdAt             BigInt
+  activityAt            BigInt
+  lastCheckTime         BigInt?
 }

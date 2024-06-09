@@ -4,6 +4,7 @@
 
 maxActiveTicketsPerUser: 1  # Maximum number of active tickets allowed per user
 menuPlaceholder: 'Select a category to open a ticket.'  # Placeholder text for the select menu
+ticketActivityCheckInterval: 1440 # Interval in minutes for checking ticket activity
 
 # Roles with access to ticket channels
 supportRoles:
@@ -11,14 +12,19 @@ supportRoles:
     - '111111111111111111'  # Support role ID 2
 
 closeTicketStaffOnly: false  # Allow only staff members with specified roles to close tickets
+enableTranscripts: true  # Enable or disable the creation and sending of ticket transcripts
+enableClaimButton: true  # Enable or disable the claim button for tickets
+enableTicketReason: true  # Enable or disable the requirement for a reason when closing tickets
+enableNotifyTicketCreator: true # Enable or disable notifying the ticket creator when a ticket is closed
+enableTicketActivityCheck: true # Enable or disable ticket activity check
+
+# ================================
+# Log channels
+# ================================
 
 logChannelId: '111111111111111111'  # ID of the channel where ticket logs will be sent
 transcriptLogsChannelId: '111111111111111111'  # ID of the channel where ticket transcript logs will be sent
 ticketCategoryId: '111111111111111111'  # ID of the category under which ticket channels will be created
-enableTranscripts: true  # Enable or disable the creation and sending of ticket transcripts
-enableClaimButton: true  # Enable or disable the claim button for tickets
-enableTicketReason: true  # Enable or disable the requirement for a reason when closing tickets
-notifyTicketCreator: true # Enable or disable notifying the ticket creator when a ticket is closed
 
 # ================================
 # Ticket Category Settings

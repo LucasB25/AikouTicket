@@ -44,7 +44,7 @@ export default class ServerData {
         }
     }
 
-    public async getTicketInfo(channelId: string): Promise<ticketsInfo> {
+    public async getTicketInfo(channelId: string): Promise<ticketsInfo | null> {
         const data = await this.prisma.ticketsInfo.findUnique({
             where: {
                 channelid: channelId,
@@ -62,11 +62,13 @@ export default class ServerData {
                 update: {
                     creator,
                     createdAt: BigInt(Date.now()),
+                    activityAt: BigInt(Date.now()),
                 },
                 create: {
                     channelid: channelId,
                     creator,
                     createdAt: BigInt(Date.now()),
+                    activityAt: BigInt(Date.now()),
                 },
             });
         } catch (error) {
@@ -83,6 +85,45 @@ export default class ServerData {
             });
         } catch (error) {
             console.error('Error deleting ticket info:', error);
+        }
+    }
+
+    public async updateActivity(channelId: string): Promise<void> {
+        try {
+            await this.prisma.ticketsInfo.update({
+                where: {
+                    channelid: channelId,
+                },
+                data: {
+                    activityAt: BigInt(Date.now()),
+                },
+            });
+        } catch (error) {
+            console.error(`Error updating activity for channel ${channelId}:`, error);
+        }
+    }
+
+    public async updateLastCheckTime(channelId: string, lastCheckTime: bigint): Promise<void> {
+        try {
+            await this.prisma.ticketsInfo.update({
+                where: {
+                    channelid: channelId,
+                },
+                data: {
+                    lastCheckTime: lastCheckTime,
+                },
+            });
+        } catch (error) {
+            console.error(`Error updating last check time for channel ${channelId}:`, error);
+        }
+    }
+
+    public async getAllTickets(): Promise<ticketsInfo[]> {
+        try {
+            return await this.prisma.ticketsInfo.findMany();
+        } catch (error) {
+            console.error('Error retrieving all tickets:', error);
+            return [];
         }
     }
 }

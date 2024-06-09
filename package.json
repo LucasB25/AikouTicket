@@ -1,6 +1,6 @@
 {
     "name": "AikouTicket",
-    "version": "0.16.0",
+    "version": "0.16.30",
     "description": "A simple AikouTicket bot for discord",
     "type": "module",
     "main": "dist/index.js",
@@ -65,6 +65,6 @@
         "dotenv": "^16.4.5",
         "path": "^0.12.7",
         "signale": "^1.4.0",
-        "yaml": "^2.4.3"
+        "yaml": "^2.4.5"
     }
 }

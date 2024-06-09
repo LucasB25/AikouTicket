@@ -25,10 +25,12 @@ interface Config {
     enableClaimButton: boolean;
     closeTicketStaffOnly: boolean;
     enableTicketReason: boolean;
-    notifyTicketCreator: boolean;
+    enableNotifyTicketCreator: boolean;
+    ticketActivityCheckInterval: number;
     logChannelId: Snowflake;
     enableTranscripts: boolean;
     transcriptLogsChannelId: Snowflake;
+    enableTicketActivityCheck: boolean;
     ticketCategories: {
         [key: string]: {
             menuLabel: string;
