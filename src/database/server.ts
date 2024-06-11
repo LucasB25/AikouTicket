@@ -7,7 +7,7 @@ export default class ServerData {
         this.prisma = new PrismaClient();
     }
 
-    public async get(guildId: string): Promise<ticketsGuild> {
+    public async get(guildId: string): Promise<ticketsGuild | null> {
         let data = await this.prisma.ticketsGuild.findUnique({
             where: {
                 guildId,
@@ -47,7 +47,7 @@ export default class ServerData {
     public async getTicketInfo(channelId: string): Promise<ticketsInfo | null> {
         const data = await this.prisma.ticketsInfo.findUnique({
             where: {
-                channelid: channelId,
+                channelId: channelId,
             },
         });
         return data;
@@ -57,7 +57,7 @@ export default class ServerData {
         try {
             await this.prisma.ticketsInfo.upsert({
                 where: {
-                    channelid: channelId,
+                    channelId: channelId,
                 },
                 update: {
                     creator,
@@ -65,7 +65,7 @@ export default class ServerData {
                     activityAt: BigInt(Date.now()),
                 },
                 create: {
-                    channelid: channelId,
+                    channelId: channelId,
                     creator,
                     createdAt: BigInt(Date.now()),
                     activityAt: BigInt(Date.now()),
@@ -80,7 +80,7 @@ export default class ServerData {
         try {
             await this.prisma.ticketsInfo.delete({
                 where: {
-                    channelid: channelId,
+                    channelId: channelId,
                 },
             });
         } catch (error) {
@@ -92,7 +92,7 @@ export default class ServerData {
         try {
             await this.prisma.ticketsInfo.update({
                 where: {
-                    channelid: channelId,
+                    channelId: channelId,
                 },
                 data: {
                     activityAt: BigInt(Date.now()),
@@ -107,7 +107,7 @@ export default class ServerData {
         try {
             await this.prisma.ticketsInfo.update({
                 where: {
-                    channelid: channelId,
+                    channelId: channelId,
                 },
                 data: {
                     lastCheckTime: lastCheckTime,

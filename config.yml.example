@@ -4,19 +4,19 @@
 
 maxActiveTicketsPerUser: 1  # Maximum number of active tickets allowed per user
 menuPlaceholder: 'Select a category to open a ticket.'  # Placeholder text for the select menu
-ticketActivityCheckInterval: 1440 # Interval in minutes for checking ticket activity
+ticketActivityCheckInterval: 1440  # Interval in minutes for checking ticket activity
 
 # Roles with access to ticket channels
 supportRoles:
-    - '111111111111111111'  # Support role ID 1
-    - '111111111111111111'  # Support role ID 2
+  - '111111111111111111'  # Support role ID 1
+  - '111111111111111111'  # Support role ID 2
 
 closeTicketStaffOnly: false  # Allow only staff members with specified roles to close tickets
 enableTranscripts: true  # Enable or disable the creation and sending of ticket transcripts
 enableClaimButton: true  # Enable or disable the claim button for tickets
 enableTicketReason: true  # Enable or disable the requirement for a reason when closing tickets
-enableNotifyTicketCreator: true # Enable or disable notifying the ticket creator when a ticket is closed
-enableTicketActivityCheck: true # Enable or disable ticket activity check
+enableNotifyTicketCreator: true  # Enable or disable notifying the ticket creator when a ticket is closed
+enableTicketActivityCheck: true  # Enable or disable ticket activity check
 
 # ================================
 # Log channels
@@ -36,63 +36,45 @@ ticketCategoryId: '111111111111111111'  # ID of the category under which ticket 
 # Using too many types could exhaust your category options for regular Discord channels.
 
 ticketCategories:
-    # Category 1
-    category1:
-        # Label displayed in the select menu
-        menuLabel: 'Category 1'
-        # Description explaining the purpose of this category
-        menuDescription: 'This category is for general inquiries and questions.'
-        # Emoji associated with this category (leave empty if none)
-        menuEmoji: '😀'
+  # Category 1
+  category1:
+    menuLabel: 'Category 1'  # Label displayed in the select menu
+    menuDescription: 'This category is for general inquiries and questions.'  # Description explaining the purpose of this category
+    menuEmoji: '😀'  # Emoji associated with this category (leave empty if none)
+    embedDescription: 'Welcome to Category 1! Feel free to ask any general questions or make inquiries here.'  # Embed description for this category
 
-        # ================================
-        # Embed description for this category
-        embedDescription: 'Welcome to Category 1! Feel free to ask any general questions or make inquiries here.'
+  # Category 2
+  category2:
+    menuLabel: 'Category 2'  # Label displayed in the select menu
+    menuDescription: 'Use this category for technical support and troubleshooting.'  # Description explaining the purpose of this category
+    menuEmoji: '🔧'  # Emoji associated with this category (leave empty if none)
+    embedDescription: 'Welcome to Category 2! Need technical support or facing any issues? Ask here.'  # Embed description for this category
 
-    # Category 2
-    category2:
-        # Label displayed in the select menu
-        menuLabel: 'Category 2'
-        # Description explaining the purpose of this category
-        menuDescription: 'Use this category for technical support and troubleshooting.'
-        # Emoji associated with this category (leave empty if none)
-        menuEmoji: '🔧'
-
-        # ================================
-        # Embed description for this category
-        embedDescription: 'Welcome to Category 2! Need technical support or facing any issues? Ask here.'
-
-    # Category 3
-    category3:
-        # Label displayed in the select menu
-        menuLabel: 'Category 3'
-        # Description explaining the purpose of this category
-        menuDescription: 'For billing-related inquiries and payment issues.'
-        # Emoji associated with this category (leave empty if none)
-        menuEmoji: '💳'
-        
-        # ================================
-        # Embed description for this category
-        embedDescription: 'Welcome to Category 3! Have any questions or issues regarding billing or payments? Let us know.'
+  # Category 3
+  category3:
+    menuLabel: 'Category 3'  # Label displayed in the select menu
+    menuDescription: 'For billing-related inquiries and payment issues.'  # Description explaining the purpose of this category
+    menuEmoji: '💳'  # Emoji associated with this category (leave empty if none)
+    embedDescription: 'Welcome to Category 3! Have any questions or issues regarding billing or payments? Let us know.'  # Embed description for this category
 
 # ==============================================
 # Embeds Locale
 # ==============================================
 
 embeds:
-  #PanelEMbed
+  # Panel Embed
   panelEmbed:
-      color: "#0099FF"
-      title: "AikouTicket"
-      description: "To create a support ticket, please select one of the options below based on the assistance you require."
-      timestamp: true
-      URL: ""
-      image: "https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&"
-      thumbnail: ""
-      footer:
-        text: "AikouTicket"
-        iconURL: ""
-      author:
-        name: ""
-        iconURL: ""
-        url: ""
+    color: "#0099FF"
+    title: "AikouTicket"
+    description: "To create a support ticket, please select one of the options below based on the assistance you require."
+    timestamp: true
+    URL: ""
+    image: "https://cdn.discordapp.com/attachments/1109764526552915988/1136666715078533303/image.png?ex=6647695f&is=664617df&hm=ec6a3e7de621daf0813e7a70c6ec7b2c9741bad8450172d356f85f28273610b2&"
+    thumbnail: ""
+    footer:
+      text: "AikouTicket"
+      iconURL: ""
+    author:
+      name: ""
+      iconURL: ""
+      url: ""

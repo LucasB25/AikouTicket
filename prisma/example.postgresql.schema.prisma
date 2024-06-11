@@ -21,7 +21,7 @@ model ticketsGuild {
 
 model ticketsInfo {
   id                    String      @id @default(uuid())
-  channelid             String      @unique
+  channelId             String      @unique
   creator               String
   createdAt             BigInt
   activityAt            BigInt

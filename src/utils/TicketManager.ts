@@ -68,8 +68,7 @@ export class TicketManager {
         client: Bot,
     ): Promise<TextChannel | null> {
         try {
-            const config = await TicketManager.readConfigFile();
-            const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = config;
+            const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = await TicketManager.readConfigFile();
             const userName = interaction.user.username;
 
             const normalizedCategoryLabel = categoryLabel.toLowerCase();
@@ -204,8 +203,7 @@ export class TicketManager {
     }
 
     public static async isUserSupport(interaction: any): Promise<boolean> {
-        const config = await TicketManager.readConfigFile();
-        const supportRoles = config.supportRoles;
+        const { supportRoles } = await TicketManager.readConfigFile();
 
         const memberRoles = interaction.member.roles.cache.map((role) => role.id);
         return memberRoles.some((role) => supportRoles.includes(role));

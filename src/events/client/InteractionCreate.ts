@@ -90,9 +90,6 @@ export default class InteractionCreate extends Event {
             await this.replyWithTicketCreationResult(interaction, channel);
         } catch (error) {
             this.client.logger.error(error);
-            await interaction.editReply({
-                content: 'Failed to update the select menu.',
-            });
         }
     }
 
@@ -161,8 +158,7 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleCloseTicketButton(interaction: any): Promise<void> {
-        const config = await TicketManager.readConfigFile();
-        const closeTicketStaffOnly = config.closeTicketStaffOnly;
+        const { closeTicketStaffOnly } = await TicketManager.readConfigFile();
         const isSupport = await TicketManager.isUserSupport(interaction);
 
         if (closeTicketStaffOnly && !isSupport) {
@@ -237,12 +233,12 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
-        const config = await TicketManager.readConfigFile();
+        const { enableTicketReason, enableNotifyTicketCreator } = await TicketManager.readConfigFile();
         const channel = interaction.channel as TextChannel;
         const categoryLabel = channel.topic?.match(/Ticket Type: (.+)/)?.[1] || 'unknown';
         const ticketChannel = interaction.channel as TextChannel;
 
-        if (config.enableTicketReason) {
+        if (enableTicketReason) {
             const embed = new EmbedBuilder()
                 .setColor(this.client.color)
                 .setDescription('Please provide a reason for closing the ticket within 1 minute.');
@@ -269,7 +265,7 @@ export default class InteractionCreate extends Event {
                 const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
                 if (ticket) {
                     const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
-                    if (config.enableNotifyTicketCreator && creator) {
+                    if (enableNotifyTicketCreator && creator) {
                         await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
                     } else if (!creator) {
                         this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
@@ -311,7 +307,7 @@ export default class InteractionCreate extends Event {
             const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
             if (ticket) {
                 const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
-                if (config.enableNotifyTicketCreator && creator) {
+                if (enableNotifyTicketCreator && creator) {
                     await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
                 } else if (!creator) {
                     this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
@@ -373,8 +369,8 @@ export default class InteractionCreate extends Event {
 
     private async handleTranscriptTicketButton(interaction: any): Promise<void> {
         const ticketChannel = interaction.channel;
-
         await LogsManager.logTicketTranscript(interaction, this.client, ticketChannel);
+
         const embed = new EmbedBuilder()
             .setColor(this.client.color)
             .setDescription('The transcript of the ticket has been generated and logged.');
