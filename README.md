@@ -108,7 +108,7 @@ Your contribution will be reviewed by the project maintainers, and any necessary
 Thanks goes to these wonderful people :
 
 <a href="https://github.com/LucasB25/AikouTicket/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=LucasB25/AikouTicket" alt="contributors" width="500" />
+  <img src="https://contrib.rocks/image?repo=LucasB25/AikouTicket" />
 </a>
 
 [version-shield]: https://img.shields.io/github/package-json/v/LucasB25/AikouTicket?style=for-the-badge
