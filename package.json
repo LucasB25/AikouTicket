@@ -1,6 +1,6 @@
 {
     "name": "AikouTicket",
-    "version": "0.20.0",
+    "version": "0.20.5",
     "description": "A simple AikouTicket bot for discord",
     "type": "module",
     "main": "dist/index.js",

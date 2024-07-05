@@ -48,7 +48,6 @@ export default class Help extends Command {
 
         const embed = client
             .embed()
-            .setColor(this.client.color)
             .setAuthor({ name: this.client.user.username })
             .setTitle('Help - List of Commands')
             .setDescription(commandList)

@@ -26,10 +26,7 @@ export default class Ping extends Command {
         });
     }
     async run(client: Bot, ctx: Context): Promise<void> {
-        const embed = client
-            .embed()
-            .setColor(this.client.color)
-            .setDescription(`**Pong:** \`${Math.round(client.ws.ping)}ms\``);
+        const embed = client.embed().setDescription(`**Pong:** \`${Math.round(client.ws.ping)}ms\``);
 
         await ctx.sendMessage({ embeds: [embed] });
     }

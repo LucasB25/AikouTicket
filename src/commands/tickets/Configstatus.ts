@@ -88,7 +88,7 @@ export default class ConfigStatus extends Command {
     }
 
     createEmbed(title: string, fields: { name: string; value: string; inline?: boolean }[]): any {
-        return this.client.embed().setColor(this.client.color).setTitle(title).addFields(fields).setTimestamp();
+        return this.client.embed().setTitle(title).addFields(fields).setTimestamp();
     }
 
     createRow(label: string): ActionRowBuilder<ButtonBuilder> {

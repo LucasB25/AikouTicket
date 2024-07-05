@@ -1,10 +1,13 @@
 import {
     ActionRowBuilder,
     ButtonBuilder,
+    type ButtonInteraction,
     ButtonStyle,
     ChannelType,
+    type CommandInteraction,
     EmbedBuilder,
     type MessageComponentInteraction,
+    type SelectMenuInteraction,
     StringSelectMenuBuilder,
     type TextChannel,
 } from 'discord.js';
@@ -18,7 +21,7 @@ export default class InteractionCreate extends Event {
         super(client, file, { name: 'interactionCreate' });
     }
 
-    public async run(interaction: any): Promise<void> {
+    public async run(interaction: CommandInteraction | SelectMenuInteraction | ButtonInteraction): Promise<void> {
         try {
             if (interaction.isCommand()) {
                 await this.handleCommandInteraction(interaction);
@@ -93,7 +96,7 @@ export default class InteractionCreate extends Event {
         }
     }
 
-    private async handleButtonInteraction(interaction: any): Promise<void> {
+    private async handleButtonInteraction(interaction: ButtonInteraction): Promise<void> {
         switch (interaction.customId) {
             case 'close-ticket':
                 await this.handleCloseTicketButton(interaction);
@@ -113,7 +116,7 @@ export default class InteractionCreate extends Event {
         }
     }
 
-    private async handleClaimTicketButton(interaction: any): Promise<void> {
+    private async handleClaimTicketButton(interaction: ButtonInteraction): Promise<void> {
         const isSupport = await TicketManager.isUserSupport(interaction);
         const userName = interaction.user.username;
 
@@ -143,7 +146,7 @@ export default class InteractionCreate extends Event {
         await this.updateClaimButton(interaction, userName, 'claimed');
     }
 
-    private async handleUnclaimTicketButton(interaction: any): Promise<void> {
+    private async handleUnclaimTicketButton(interaction: ButtonInteraction): Promise<void> {
         const isSupport = await TicketManager.isUserSupport(interaction);
 
         if (!isSupport) {
@@ -157,7 +160,7 @@ export default class InteractionCreate extends Event {
         await this.updateClaimButton(interaction, interaction.user.username, 'unclaimed');
     }
 
-    private async handleCloseTicketButton(interaction: any): Promise<void> {
+    private async handleCloseTicketButton(interaction: ButtonInteraction): Promise<void> {
         const { closeTicketStaffOnly } = await TicketManager.readConfigFile();
         const isSupport = await TicketManager.isUserSupport(interaction);
 
@@ -232,16 +235,14 @@ export default class InteractionCreate extends Event {
         }, 60000);
     }
 
-    private async handleConfirmCloseTicketButton(interaction: any): Promise<void> {
+    private async handleConfirmCloseTicketButton(interaction: ButtonInteraction): Promise<void> {
         const { enableTicketReason, enableNotifyTicketCreator } = await TicketManager.readConfigFile();
         const channel = interaction.channel as TextChannel;
         const categoryLabel = channel.topic?.match(/Ticket Type: (.+)/)?.[1] || 'unknown';
         const ticketChannel = interaction.channel as TextChannel;
 
         if (enableTicketReason) {
-            const embed = new EmbedBuilder()
-                .setColor(this.client.color)
-                .setDescription('Please provide a reason for closing the ticket within 1 minute.');
+            const embed = new EmbedBuilder().setDescription('Please provide a reason for closing the ticket within 1 minute.');
 
             await interaction.reply({
                 embeds: [embed],
@@ -277,17 +278,13 @@ export default class InteractionCreate extends Event {
 
             collector.on('end', async () => {
                 if (!shouldCloseTicket) {
-                    const embed = new EmbedBuilder()
-                        .setColor(this.client.color)
-                        .setDescription('Failed to close the ticket. Reason not provided within 1 minute.');
+                    const embed = new EmbedBuilder().setDescription('Failed to close the ticket. Reason not provided within 1 minute.');
 
                     await interaction.followUp({ embeds: [embed], ephemeral: true });
                     return;
                 }
 
-                const announcementEmbed = new EmbedBuilder()
-                    .setColor(this.client.color)
-                    .setDescription('This ticket will be closed in 10 seconds.');
+                const announcementEmbed = new EmbedBuilder().setDescription('This ticket will be closed in 10 seconds.');
 
                 await interaction.followUp({ embeds: [announcementEmbed], ephemeral: true });
 
@@ -316,9 +313,7 @@ export default class InteractionCreate extends Event {
                 this.client.logger.error(`Failed to find ticket information for ${ticketChannel.id}.`);
             }
 
-            const announcementEmbed = new EmbedBuilder()
-                .setColor(this.client.color)
-                .setDescription('This ticket will be closed in 10 seconds.');
+            const announcementEmbed = new EmbedBuilder().setDescription('This ticket will be closed in 10 seconds.');
 
             await interaction.reply({
                 embeds: [announcementEmbed],
@@ -371,9 +366,7 @@ export default class InteractionCreate extends Event {
         const ticketChannel = interaction.channel;
         await LogsManager.logTicketTranscript(interaction, this.client, ticketChannel);
 
-        const embed = new EmbedBuilder()
-            .setColor(this.client.color)
-            .setDescription('The transcript of the ticket has been generated and logged.');
+        const embed = new EmbedBuilder().setDescription('The transcript of the ticket has been generated and logged.');
 
         await interaction.reply({
             embeds: [embed],
@@ -381,7 +374,7 @@ export default class InteractionCreate extends Event {
         });
     }
 
-    private async updateSelectMenu(interaction: any, placeholder: string, options: any): Promise<void> {
+    private async updateSelectMenu(interaction: SelectMenuInteraction, placeholder: string, options: any): Promise<void> {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('categoryMenu')
             .setPlaceholder(placeholder)

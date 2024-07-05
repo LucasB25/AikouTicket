@@ -39,7 +39,7 @@ export default class About extends Command {
             new ButtonBuilder().setLabel('Support Server').setURL('https://discord.gg/JeaQTqzsJw').setStyle(ButtonStyle.Link),
         );
 
-        const embed = client.embed().setColor(this.client.color).setAuthor({ name: 'AikouTicket' }).addFields(
+        const embed = client.embed().setAuthor({ name: 'AikouTicket' }).addFields(
             { name: 'Creator', value: '[LucasB25](https://github.com/lucasb25)', inline: true },
             {
                 name: 'Repository',
