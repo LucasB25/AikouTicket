@@ -117,10 +117,7 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleClaimTicketButton(interaction: ButtonInteraction): Promise<void> {
-        const isSupport = await TicketManager.isUserSupport(interaction);
-        const userName = interaction.user.username;
-
-        if (!isSupport) {
+        if (!(await TicketManager.isUserSupport(interaction))) {
             await interaction.reply({
                 content: 'You do not have permission to claim this ticket.',
                 ephemeral: true,
@@ -131,9 +128,9 @@ export default class InteractionCreate extends Event {
         const embed = new EmbedBuilder()
             .setColor('#00FF00')
             .setTitle('Ticket Claimed')
-            .setDescription(`🎟️ **Ticket claimed by ${userName}.**\nI will start assisting you right away.`)
+            .setDescription(`🎟️ **Ticket claimed by ${interaction.user.username}.**\nI will start assisting you right away.`)
             .setFooter({
-                text: `Ticket claimed by ${userName}`,
+                text: `Ticket claimed by ${interaction.user.username}`,
                 iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }),
             })
             .setTimestamp();
@@ -143,13 +140,11 @@ export default class InteractionCreate extends Event {
             ephemeral: false,
         });
 
-        await this.updateClaimButton(interaction, userName, 'claimed');
+        await this.updateClaimButton(interaction, interaction.user.username, 'claimed');
     }
 
     private async handleUnclaimTicketButton(interaction: ButtonInteraction): Promise<void> {
-        const isSupport = await TicketManager.isUserSupport(interaction);
-
-        if (!isSupport) {
+        if (!(await TicketManager.isUserSupport(interaction))) {
             await interaction.reply({
                 content: 'You do not have permission to unclaim this ticket.',
                 ephemeral: true,
@@ -172,16 +167,14 @@ export default class InteractionCreate extends Event {
             return;
         }
 
-        const transcriptsButton = new ButtonBuilder()
-            .setCustomId('transcripts-ticket')
-            .setLabel('Transcripts')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('📝')
-            .setDisabled(!isSupport);
-
         const confirmationButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder().setCustomId('confirm-close-ticket').setLabel('Confirm').setStyle(ButtonStyle.Danger).setEmoji('⛔'),
-            transcriptsButton,
+            new ButtonBuilder()
+                .setCustomId('transcripts-ticket')
+                .setLabel('Transcripts')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('📝')
+                .setDisabled(!isSupport),
         );
 
         const embed = new EmbedBuilder()
@@ -242,10 +235,9 @@ export default class InteractionCreate extends Event {
         const ticketChannel = interaction.channel as TextChannel;
 
         if (enableTicketReason) {
-            const embed = new EmbedBuilder().setDescription('Please provide a reason for closing the ticket within 1 minute.');
 
             await interaction.reply({
-                embeds: [embed],
+                embeds: [new EmbedBuilder().setDescription('Please provide a reason for closing the ticket within 1 minute.')],
                 ephemeral: true,
             });
 
@@ -278,9 +270,11 @@ export default class InteractionCreate extends Event {
 
             collector.on('end', async () => {
                 if (!shouldCloseTicket) {
-                    const embed = new EmbedBuilder().setDescription('Failed to close the ticket. Reason not provided within 1 minute.');
 
-                    await interaction.followUp({ embeds: [embed], ephemeral: true });
+                    await interaction.followUp({
+                        embeds: [new EmbedBuilder().setDescription('Failed to close the ticket. Reason not provided within 1 minute.')],
+                        ephemeral: true
+                    });
                     return;
                 }
 
@@ -400,14 +394,7 @@ export default class InteractionCreate extends Event {
             });
         } else {
             await interaction.editReply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor('#FF0000')
-                        .setTitle('Ticket Creation Failed')
-                        .setDescription('Failed to create ticket channel.')
-                        .setFooter({ text: 'Ticket System', iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 1024 }) })
-                        .setTimestamp(),
-                ],
+                content: 'Failed to create ticket. Please try again later.',
             });
         }
     }
