@@ -1,24 +1,24 @@
-import { type Bot, Command, type Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from "../../structures/index.js";
 
 export default class Ping extends Command {
     constructor(client: Bot) {
         super(client, {
-            name: 'ping',
+            name: "ping",
             nameLocalizations: {
-                fr: 'ping',
+                fr: "ping",
             },
             description: {
-                content: 'Get the bot latency',
-                usage: 'ping',
-                examples: ['ping'],
+                content: "Get the bot latency",
+                usage: "ping",
+                examples: ["ping"],
             },
             descriptionLocalizations: {
-                fr: 'Obtiens la latence du bot.',
+                fr: "Obtiens la latence du bot.",
             },
-            category: 'general',
+            category: "general",
             permissions: {
                 dev: false,
-                client: ['SendMessages', 'ViewChannel', 'EmbedLinks'],
+                client: ["SendMessages", "ViewChannel", "EmbedLinks"],
                 user: [],
             },
             cooldown: 3,
@@ -26,7 +26,7 @@ export default class Ping extends Command {
         });
     }
     async run(client: Bot, ctx: Context): Promise<void> {
-        const embed = client.embed().setDescription(`**Pong:** \`${Math.round(client.ws.ping)}ms\``);
+        const embed = this.client.embed().setDescription(`**Pong:** \`${Math.round(client.ws.ping)}ms\``);
 
         await ctx.sendMessage({ embeds: [embed] });
     }

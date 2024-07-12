@@ -1,24 +1,24 @@
-import { type Bot, Command, type Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from "../../structures/index.js";
 
 export default class Help extends Command {
     constructor(client: Bot) {
         super(client, {
-            name: 'help',
+            name: "help",
             nameLocalizations: {
-                fr: 'aide',
+                fr: "aide",
             },
             description: {
-                content: 'Lists all available commands',
-                usage: 'help',
-                examples: ['help'],
+                content: "Lists all available commands",
+                usage: "help",
+                examples: ["help"],
             },
             descriptionLocalizations: {
-                fr: 'Liste toutes les commandes disponibles',
+                fr: "Liste toutes les commandes disponibles",
             },
-            category: 'general',
+            category: "general",
             permissions: {
                 dev: false,
-                client: ['SendMessages', 'ViewChannel', 'EmbedLinks'],
+                client: ["SendMessages", "ViewChannel", "EmbedLinks"],
                 user: [],
             },
             cooldown: 3,
@@ -39,17 +39,17 @@ export default class Help extends Command {
             });
         });
 
-        let commandList = '';
+        let commandList = "";
         categories.forEach((commands, category) => {
             commandList += `\n**${category.charAt(0).toUpperCase() + category.slice(1)}**\n`;
-            commandList += commands.map((cmd) => `\`${cmd.name}\`: ${cmd.description}`).join('\n');
-            commandList += '\n';
+            commandList += commands.map((cmd) => `\`${cmd.name}\`: ${cmd.description}`).join("\n");
+            commandList += "\n";
         });
 
-        const embed = client
+        const embed = this.client
             .embed()
-            .setAuthor({ name: this.client.user.username })
-            .setTitle('Help - List of Commands')
+            .setAuthor({ name: this.client.user?.username })
+            .setTitle("Help - List of Commands")
             .setDescription(commandList)
             .setTimestamp();
 

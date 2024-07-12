@@ -1,14 +1,14 @@
-import { type Message, TextChannel } from 'discord.js';
+import { type Message, TextChannel } from "discord.js";
 
-import { type Bot, Event } from '../../structures/index.js';
-import { TicketManager } from '../../utils/TicketManager.js';
+import { type Bot, Event } from "../../structures/index.js";
+import { TicketManager } from "../../utils/TicketManager.js";
 
 export default class MessageCreate extends Event {
     private intervalId: NodeJS.Timeout | null = null;
 
     constructor(client: Bot, file: string) {
         super(client, file, {
-            name: 'messageCreate',
+            name: "messageCreate",
         });
 
         this.startTicketActivityCheck();
@@ -19,7 +19,7 @@ export default class MessageCreate extends Event {
             try {
                 await this.checkTicketActivity();
             } catch (error) {
-                this.client.logger.error('Error checking ticket activity:', error);
+                this.client.logger.error("Error checking ticket activity:", error);
             }
         }, 60000); // 1 minute interval
     }
@@ -58,7 +58,7 @@ export default class MessageCreate extends Event {
 
                         const { creator } = ticketInfo;
                         const authorMention = `<@${creator}>`;
-                        const supportMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(', ');
+                        const supportMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
 
                         await channel.send({
                             content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n${authorMention}, ${supportMentions}`,

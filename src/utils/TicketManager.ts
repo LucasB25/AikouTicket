@@ -1,4 +1,4 @@
-import type { Bot } from '../structures/index.js';
+import type { Bot } from "../structures/index.js";
 import {
     ActionRowBuilder,
     ButtonBuilder,
@@ -11,11 +11,11 @@ import {
     PermissionFlagsBits,
     type Snowflake,
     TextChannel,
-} from 'discord.js';
-import { promises as fs } from 'node:fs';
-import YAML from 'yaml';
+} from "discord.js";
+import { promises as fs } from "node:fs";
+import YAML from "yaml";
 
-import { LogsManager } from './LogsManager.js';
+import { LogsManager } from "./LogsManager.js";
 
 interface Config {
     supportRoles: Snowflake[];
@@ -61,6 +61,7 @@ interface Config {
     };
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class TicketManager {
     public static async createTicket(
         interaction: CommandInteraction | ButtonInteraction,
@@ -81,7 +82,7 @@ export class TicketManager {
             const claimButton = TicketManager.createClaimButton(enableClaimButton);
 
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton, ...(claimButton ? [claimButton] : []));
-            const messageContent = supportRoles.map((roleId) => `<@&${roleId}>`).join(', ');
+            const messageContent = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
 
             const message = await channel.send({ content: messageContent, embeds: [embed], components: [row] });
             await message.pin();
@@ -140,19 +141,19 @@ export class TicketManager {
         const channel = await interaction.guild.channels.create(channelOptions);
 
         if (!(channel instanceof TextChannel)) {
-            throw new Error('Failed to create a text channel: Unexpected channel type');
+            throw new Error("Failed to create a text channel: Unexpected channel type");
         }
 
         return channel;
     }
 
     private static createCloseButton(): ButtonBuilder {
-        return new ButtonBuilder().setCustomId('close-ticket').setLabel('Close').setStyle(ButtonStyle.Danger).setEmoji('🔒');
+        return new ButtonBuilder().setCustomId("close-ticket").setLabel("Close").setStyle(ButtonStyle.Danger).setEmoji("🔒");
     }
 
     private static createClaimButton(enableClaimButton: boolean): ButtonBuilder | null {
         if (!enableClaimButton) return null;
-        return new ButtonBuilder().setCustomId('claim-ticket').setLabel('Claim').setStyle(ButtonStyle.Primary).setEmoji('🎫');
+        return new ButtonBuilder().setCustomId("claim-ticket").setLabel("Claim").setStyle(ButtonStyle.Primary).setEmoji("🎫");
     }
 
     private static createTicketEmbed(
@@ -162,13 +163,13 @@ export class TicketManager {
         categoryLabel: string,
         embedDescription: string,
     ): EmbedBuilder {
-        const userAvatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 1024 });
+        const userAvatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 1024 });
 
         return new EmbedBuilder()
             .setThumbnail(userAvatarURL)
             .setTitle(categoryLabel)
             .setDescription(embedDescription)
-            .setColor('#00ff00')
+            .setColor("#00ff00")
             .setFooter({ text: `Ticket created by ${userName}`, iconURL: userAvatarURL })
             .setTimestamp();
     }
@@ -211,7 +212,7 @@ export class TicketManager {
 
     public static async readConfigFile(): Promise<Config> {
         try {
-            const configFile = await fs.readFile('./config.yml', 'utf8');
+            const configFile = await fs.readFile("./config.yml", "utf8");
             return YAML.parse(configFile) as Config;
         } catch (error) {
             throw new Error(`Failed to read config file: ${error.message}`);

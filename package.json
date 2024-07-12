@@ -1,6 +1,6 @@
 {
     "name": "AikouTicket",
-    "version": "0.20.5",
+    "version": "0.25.5",
     "description": "A simple AikouTicket bot for discord",
     "type": "module",
     "main": "dist/index.js",
@@ -11,8 +11,8 @@
         "prisma:migrate": "npx prisma migrate dev --name init",
         "clean:windows": "rmdir /s /q dist",
         "clean:linux": "rm -rf dist",
-        "lint": "eslint . --fix --ext .js,.jsx,.ts,.tsx",
-        "format": "biome check --apply-unsafe ./src"
+        "lint": "biome lint --write ./src",
+        "format": "biome format --write ./src"
     },
     "lint-staged": {
         "*.ts": [
@@ -32,13 +32,9 @@
         "@biomejs/biome": "^1.8.3",
         "@types/node": "^20.14.10",
         "@types/signale": "^1.4.7",
-        "@typescript-eslint/eslint-plugin": "^7.15.0",
-        "@typescript-eslint/parser": "^7.15.0",
-        "eslint": "^8.57.0",
-        "eslint-plugin-import": "^2.29.1",
-        "eslint-plugin-unicorn": "^54.0.0",
-        "prisma": "^5.16.1",
-        "ts-node": "^10.9.2"
+        "prisma": "^5.16.2",
+        "ts-node": "^10.9.2",
+        "lint-staged": "^15.2.7"
     },
     "keywords": [
         "discord",
@@ -59,7 +55,7 @@
         "underlineLabel": true
     },
     "dependencies": {
-        "@prisma/client": "^5.16.1",
+        "@prisma/client": "^5.16.2",
         "discord-html-transcripts": "^3.2.0",
         "discord.js": "^14.15.3",
         "dotenv": "^16.4.5",
