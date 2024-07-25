@@ -236,7 +236,7 @@ export default class InteractionCreate extends Event {
 
         if (enableTicketReason) {
             await interaction.reply({
-                content: "Ticket closure was not confirmed.",
+                content: "Please provide a reason for closing the ticket within 1 minute.",
                 ephemeral: true,
             });
 
@@ -270,7 +270,7 @@ export default class InteractionCreate extends Event {
             collector.on("end", async () => {
                 if (!shouldCloseTicket) {
                     await interaction.followUp({
-                        content: "Ticket closure was not confirmed.",
+                        content: "Failed to close the ticket. Reason not provided within 1 minute.",
                         ephemeral: true,
                     });
                     return;

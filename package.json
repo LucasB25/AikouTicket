@@ -24,9 +24,9 @@
     "homepage": "https://github.com/LucasB25/AikouTicket#readme",
     "devDependencies": {
         "@biomejs/biome": "^1.8.3",
-        "@types/node": "^20.14.10",
+        "@types/node": "^20.14.12",
         "@types/signale": "^1.4.7",
-        "prisma": "^5.16.2",
+        "prisma": "^5.17.0",
         "ts-node": "^10.9.2"
     },
     "keywords": [
@@ -48,12 +48,12 @@
         "underlineLabel": true
     },
     "dependencies": {
-        "@prisma/client": "^5.16.2",
+        "@prisma/client": "^5.17.0",
         "discord-html-transcripts": "^3.2.0",
         "discord.js": "^14.15.3",
         "dotenv": "^16.4.5",
         "path": "^0.12.7",
         "signale": "^1.4.0",
-        "yaml": "^2.4.5"
+        "yaml": "^2.5.0"
     }
 }

@@ -30,7 +30,6 @@ export default class PanelCommand extends Command {
     }
 
     async run(_client: Bot, ctx: Context): Promise<void> {
-        await ctx.sendDeferMessage({});
         const config = await TicketManager.readConfigFile();
 
         const panelEmbedConfig = config.embeds.panelEmbed;
@@ -41,15 +40,11 @@ export default class PanelCommand extends Command {
         const actionRowsMenus = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
         try {
-            await ctx.editMessage({ content: "Sending the panel in this channel..." });
+            await ctx.sendMessage({ content: "Sending the panel in this channel...", ephemeral: true });
             await ctx.channel.send({ embeds: [panelEmbed], components: [actionRowsMenus] });
             await this.saveTicketData(ctx.guild.id, selectMenu.options);
-            await ctx.editMessage({ content: "Panel sent successfully." });
         } catch (error) {
             this.client.logger.error("Error sending the panel or saving ticket data:", error);
-            await ctx.editMessage({
-                content: "There was an error sending the panel. Please contact the administrator.",
-            });
         }
     }
 
