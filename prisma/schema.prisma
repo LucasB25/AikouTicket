@@ -13,6 +13,11 @@ model ticketsGuild {
   selectMenuOptions     String
 }
 
+model ticketStats {
+  channelId             String      @id
+  rating                Float       @default(0) 
+}
+
 model ticketsInfo {
   id                    String      @id @default(uuid())
   channelId             String      @unique

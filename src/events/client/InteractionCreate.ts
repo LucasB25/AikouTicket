@@ -29,6 +29,8 @@ export default class InteractionCreate extends Event {
                 await this.handleSelectMenuInteraction(interaction);
             } else if (interaction.isButton()) {
                 await this.handleButtonInteraction(interaction);
+            } else if (interaction.isStringSelectMenu() && interaction.customId.startsWith("ratingMenu-")) {
+                await this.handleRatingSelectMenu(interaction);
             }
         } catch (error) {
             this.client.logger.error(`Failed to handle interaction: ${error.message}`);
@@ -259,6 +261,7 @@ export default class InteractionCreate extends Event {
                     const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
                     if (enableNotifyTicketCreator && creator) {
                         await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
+                        await this.sendRatingMenu(creator, ticketChannel);
                     } else if (!creator) {
                         this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
                     }
@@ -298,6 +301,7 @@ export default class InteractionCreate extends Event {
                 const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
                 if (enableNotifyTicketCreator && creator) {
                     await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
+                    await this.sendRatingMenu(creator, ticketChannel);
                 } else if (!creator) {
                     this.client.logger.error(`Failed to find creator of ticket ${ticketChannel.id}.`);
                 }
@@ -347,10 +351,62 @@ export default class InteractionCreate extends Event {
                 .setThumbnail(interaction.guild.iconURL({ format: "png", size: 1024 }))
                 .setFooter({ text: "Ticket System", iconURL: interaction.user.displayAvatarURL({ extension: "png", size: 1024 }) })
                 .setTimestamp();
-
             await user.send({ embeds: [embed] });
         } catch (error) {
             this.client.logger.error("Failed to send DM to ticket creator:", error);
+        }
+    }
+
+    private async sendRatingMenu(user: any, ticketChannel: TextChannel): Promise<void> {
+        const ratingMenu = new StringSelectMenuBuilder()
+            .setCustomId(`ratingMenu-${ticketChannel.id}`)
+            .setPlaceholder("Rate your support ticket experience")
+            .addOptions(
+                { label: "⭐ 1 Star", value: "1" },
+                { label: "⭐⭐ 2 Stars", value: "2" },
+                { label: "⭐⭐⭐ 3 Stars", value: "3" },
+                { label: "⭐⭐⭐⭐ 4 Stars", value: "4" },
+                { label: "⭐⭐⭐⭐⭐ 5 Stars", value: "5" },
+            );
+
+        const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(ratingMenu);
+
+        const embed = new EmbedBuilder()
+            .setColor("#FFD700")
+            .setTitle("Rate Your Ticket Experience")
+            .setDescription("Please rate your experience with our support team by selecting a rating below.");
+
+        try {
+            await user.send({ embeds: [embed], components: [row] });
+        } catch (error) {
+            this.client.logger.error("Failed to send rating menu:", error);
+        }
+    }
+
+    private async handleRatingSelectMenu(interaction: SelectMenuInteraction): Promise<void> {
+        const channelId = interaction.customId.split("-")[1];
+        const rating = parseInt(interaction.values[0], 10);
+
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+            await interaction.reply({
+                content: "Invalid rating. Please select a rating between 1 and 5 stars.",
+                ephemeral: true,
+            });
+            return;
+        }
+
+        try {
+            await this.client.db.updateTicketStats(channelId, rating);
+            await interaction.reply({
+                content: "Thank you for rating your support ticket experience!",
+                ephemeral: true,
+            });
+        } catch (error) {
+            this.client.logger.error("Failed to save ticket rating:", error);
+            await interaction.reply({
+                content: `An error occurred: ${error.message}`,
+                ephemeral: true,
+            });
         }
     }
 

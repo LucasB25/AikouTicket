@@ -1,4 +1,4 @@
-import { PrismaClient, type ticketsGuild, type ticketsInfo } from "@prisma/client";
+import { PrismaClient, type ticketsGuild, type ticketsInfo, type ticketStats } from "@prisma/client";
 
 export default class ServerData {
     private prisma: PrismaClient;
@@ -67,6 +67,42 @@ export default class ServerData {
     public async getAllTickets(): Promise<ticketsInfo[]> {
         return this.prisma.ticketsInfo.findMany().catch((error) => {
             console.error("Error retrieving all tickets:", error);
+            return [];
+        });
+    }
+
+    public async getTicketStats(channelId: string): Promise<ticketStats | null> {
+        return await this.prisma.ticketStats.findUnique({ where: { channelId } });
+    }
+
+    public async saveTicketStats(channelId: string, rating: number = 0): Promise<void> {
+        await this.prisma.ticketStats
+            .upsert({
+                where: { channelId },
+                update: { rating },
+                create: { channelId, rating },
+            })
+            .catch((error) => console.error("Error saving ticket stats:", error));
+    }
+
+    public async updateTicketStats(channelId: string, rating: number): Promise<void> {
+        await this.prisma.ticketStats
+            .update({
+                where: { channelId },
+                data: { rating },
+            })
+            .catch((error) => console.error(`Error updating ticket stats for channel ${channelId}:`, error));
+    }
+
+    public async deleteTicketStats(channelId: string): Promise<void> {
+        await this.prisma.ticketStats
+            .delete({ where: { channelId } })
+            .catch((error) => console.error("Error deleting ticket stats:", error));
+    }
+
+    public async getAllTicketStats(): Promise<ticketStats[]> {
+        return this.prisma.ticketStats.findMany().catch((error) => {
+            console.error("Error retrieving all ticket stats:", error);
             return [];
         });
     }

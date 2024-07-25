@@ -90,6 +90,7 @@ export class TicketManager {
 
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
             await client.db.saveTicketInfo(channel.id, userName);
+            await client.db.saveTicketStats(channel.id);
 
             return channel;
         } catch (error) {
