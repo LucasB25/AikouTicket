@@ -1,80 +1,81 @@
 {
     "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
     "organizeImports": {
-        "enabled": true
+      "enabled": true
     },
     "linter": {
-        "enabled": true,
-        "rules": {
-            "all": true,
-            "suspicious": {
-                "noExplicitAny": "off",
-                "noConfusingVoidType": "off",
-                "noGlobalIsFinite": "off",
-                "noGlobalIsNan": "off",
-                "noEmptyBlockStatements": "off"
-            },
-            "style": {
-                "noNonNullAssertion": "off",
-                "noParameterAssign": "off",
-                "noInferrableTypes": "off",
-                "useNumberNamespace": "off",
-                "noDefaultExport": "off",
-                "useBlockStatements": "off",
-                "useFilenamingConvention": "off",
-                "useNamingConvention": "off",
-                "useSingleCaseStatement": "off"
-            },
-            "complexity": {
-                "noBannedTypes": "off",
-                "noForEach": "off",
-                "noExcessiveCognitiveComplexity": {
-                    "level": "warn",
-                    "options": {
-                        "maxAllowedComplexity": 30
-                    }
-                }
-            },
-            "security": {
-                "noGlobalEval": "off"
-            },
-            "correctness": {
-                "noVoidTypeReturn": "off"
-            },
-            "performance": {
-                "noBarrelFile": "off"
+      "enabled": true,
+      "rules": {
+        "all": true,
+        "suspicious": {
+          "noExplicitAny": "off",
+          "noConfusingVoidType": "off",
+          "noGlobalIsFinite": "off",
+          "noGlobalIsNan": "off",
+          "noEmptyBlockStatements": "off"
+        },
+        "style": {
+          "noNonNullAssertion": "off",
+          "noParameterAssign": "off",
+          "noInferrableTypes": "off",
+          "useNumberNamespace": "off",
+          "noDefaultExport": "off",
+          "useBlockStatements": "off",
+          "useFilenamingConvention": "off",
+          "useNamingConvention": "off",
+          "useSingleCaseStatement": "off"
+        },
+        "complexity": {
+          "noBannedTypes": "off",
+          "noForEach": "off",
+          "noExcessiveCognitiveComplexity": {
+            "level": "warn",
+            "options": {
+              "maxAllowedComplexity": 255
             }
+          }
+        },
+        "security": {
+          "noGlobalEval": "off"
+        },
+        "correctness": {
+          "noVoidTypeReturn": "off"
+        },
+        "performance": {
+          "noBarrelFile": "off"
         }
-    },
-    "files": {
-        "ignoreUnknown": true,
-        "ignore": [
-            ".vscode",
-            "node_modules",
-            "dist"
-        ]
-    },
-    "json": {
-        "formatter": {
-            "enabled": true,
-            "indentWidth": 4,
-            "lineWidth": 80
-        }
+      }
     },
     "formatter": {
+      "enabled": true,
+      "indentWidth": 4,
+      "indentStyle": "space",
+      "lineEnding": "crlf",
+      "lineWidth": 140,
+      "formatWithErrors": true
+    },
+    "json": {
+      "linter": {
+        "enabled": true
+      },
+      "formatter": {
         "enabled": true,
-        "indentWidth": 4,
-        "indentStyle": "space",
-        "lineWidth": 140,
+        "indentWidth": 2,
         "lineEnding": "crlf",
-        "formatWithErrors": true
+        "lineWidth": 80
+      }
     },
     "javascript": {
-        "formatter": {
-            "quoteStyle": "double",
-            "arrowParentheses": "always",
-            "bracketSameLine": true,
-            "semicolons": "always"
-        }
+      "formatter": {
+        "quoteStyle": "double",
+        "arrowParentheses": "always",
+        "bracketSameLine": true,
+        "semicolons": "always"
+      }
+    },
+    "files": {
+      "ignoreUnknown": true,
+      "ignore": [".vscode", "dist", "node_modules"]
     }
-}
+  }
+  

@@ -77,7 +77,13 @@ export class TicketManager {
             if (!categoryConfig) throw new Error(`Category "${categoryLabel}" not found in config.`);
 
             const channel = await TicketManager.createChannel(interaction, userName, categoryLabel, supportRoles, ticketCategoryId);
-            const embed = TicketManager.createTicketEmbed(client, interaction, userName, categoryLabel, categoryConfig.embedDescription);
+            const embed = TicketManager.createTicketEmbed(
+                client,
+                interaction,
+                userName,
+                categoryConfig.menuLabel,
+                categoryConfig.embedDescription,
+            );
             const closeButton = TicketManager.createCloseButton();
             const claimButton = TicketManager.createClaimButton(enableClaimButton);
 
@@ -161,14 +167,14 @@ export class TicketManager {
         _client: Bot,
         interaction: CommandInteraction | ButtonInteraction,
         userName: string,
-        categoryLabel: string,
+        menuLabel: string,
         embedDescription: string,
     ): EmbedBuilder {
         const userAvatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 1024 });
 
         return new EmbedBuilder()
             .setThumbnail(userAvatarURL)
-            .setTitle(categoryLabel)
+            .setTitle(menuLabel)
             .setDescription(embedDescription)
             .setColor("#00ff00")
             .setFooter({ text: `Ticket created by ${userName}`, iconURL: userAvatarURL })
