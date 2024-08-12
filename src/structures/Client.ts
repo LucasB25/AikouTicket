@@ -8,8 +8,11 @@ import {
     type RESTPostAPIChatInputApplicationCommandsJSONBody,
     Routes,
 } from "discord.js";
+// biome-ignore lint/correctness/noNodejsModules: <explanation>
 import fs from "node:fs";
+// biome-ignore lint/correctness/noNodejsModules: <explanation>
 import path from "node:path";
+// biome-ignore lint/correctness/noNodejsModules: <explanation>
 import { fileURLToPath } from "node:url";
 
 import Logger from "./Logger.js";

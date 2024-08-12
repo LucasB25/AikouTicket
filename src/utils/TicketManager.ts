@@ -12,6 +12,7 @@ import {
     type Snowflake,
     TextChannel,
 } from "discord.js";
+// biome-ignore lint/correctness/noNodejsModules: <explanation>
 import { promises as fs } from "node:fs";
 import YAML from "yaml";
 
@@ -76,7 +77,14 @@ export class TicketManager {
             const categoryConfig = ticketCategories[normalizedCategoryLabel];
             if (!categoryConfig) throw new Error(`Category "${categoryLabel}" not found in config.`);
 
-            const channel = await TicketManager.createChannel(interaction, userName, categoryLabel, supportRoles, ticketCategoryId);
+            const channel = await TicketManager.createChannel(
+                interaction,
+                userName,
+                categoryConfig.menuLabel,
+                categoryLabel,
+                supportRoles,
+                ticketCategoryId,
+            );
             const embed = TicketManager.createTicketEmbed(
                 client,
                 interaction,
@@ -109,11 +117,12 @@ export class TicketManager {
         interaction: CommandInteraction | ButtonInteraction,
         userName: string,
         categoryLabel: string,
+        menuLabel: string,
         supportRoles: Snowflake[],
         ticketCategoryId: Snowflake,
     ): Promise<TextChannel> {
         const channelOptions: GuildChannelCreateOptions = {
-            name: `${categoryLabel}-${userName}`,
+            name: `${menuLabel}-${userName}`,
             type: ChannelType.GuildText,
             topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
             parent: ticketCategoryId,
