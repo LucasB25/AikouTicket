@@ -6,16 +6,10 @@ export default class About extends Command {
     constructor(client: Bot) {
         super(client, {
             name: "about",
-            nameLocalizations: {
-                fr: "à-propos",
-            },
             description: {
                 content: "Shows information about the bot",
                 usage: "about",
                 examples: ["about"],
-            },
-            descriptionLocalizations: {
-                fr: "Affiche des informations sur le bot",
             },
             category: "general",
             permissions: {

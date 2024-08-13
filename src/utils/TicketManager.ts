@@ -71,20 +71,19 @@ export class TicketManager {
     ): Promise<TextChannel | null> {
         try {
             const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = await TicketManager.readConfigFile();
-            const userName = interaction.user.username;
+            const userName = interaction.user.username.toLowerCase();
+            const categoryConfig = ticketCategories[categoryLabel.toLowerCase()];
 
-            const normalizedCategoryLabel = categoryLabel.toLowerCase();
-            const categoryConfig = ticketCategories[normalizedCategoryLabel];
             if (!categoryConfig) throw new Error(`Category "${categoryLabel}" not found in config.`);
 
             const channel = await TicketManager.createChannel(
                 interaction,
                 userName,
                 categoryConfig.menuLabel,
-                categoryLabel,
                 supportRoles,
                 ticketCategoryId,
             );
+
             const embed = TicketManager.createTicketEmbed(
                 client,
                 interaction,
@@ -116,7 +115,6 @@ export class TicketManager {
     private static async createChannel(
         interaction: CommandInteraction | ButtonInteraction,
         userName: string,
-        categoryLabel: string,
         menuLabel: string,
         supportRoles: Snowflake[],
         ticketCategoryId: Snowflake,
@@ -124,7 +122,7 @@ export class TicketManager {
         const channelOptions: GuildChannelCreateOptions = {
             name: `${menuLabel}-${userName}`,
             type: ChannelType.GuildText,
-            topic: `Ticket Creator: ${userName} | Ticket Type: ${categoryLabel}`,
+            topic: `Ticket Creator: ${userName} | Ticket Type: ${menuLabel}`,
             parent: ticketCategoryId,
             permissionOverwrites: [
                 {
@@ -155,10 +153,7 @@ export class TicketManager {
         };
 
         const channel = await interaction.guild.channels.create(channelOptions);
-
-        if (!(channel instanceof TextChannel)) {
-            throw new Error("Failed to create a text channel: Unexpected channel type");
-        }
+        if (!(channel instanceof TextChannel)) throw new Error("Failed to create a text channel: Unexpected channel type");
 
         return channel;
     }
@@ -168,8 +163,9 @@ export class TicketManager {
     }
 
     private static createClaimButton(enableClaimButton: boolean): ButtonBuilder | null {
-        if (!enableClaimButton) return null;
-        return new ButtonBuilder().setCustomId("claim-ticket").setLabel("Claim").setStyle(ButtonStyle.Primary).setEmoji("🎫");
+        return enableClaimButton
+            ? new ButtonBuilder().setCustomId("claim-ticket").setLabel("Claim").setStyle(ButtonStyle.Primary).setEmoji("🎫")
+            : null;
     }
 
     private static createTicketEmbed(
@@ -201,14 +197,14 @@ export class TicketManager {
         if (embedConfig.image) embed.setImage(embedConfig.image);
         if (embedConfig.thumbnail) embed.setThumbnail(embedConfig.thumbnail);
 
-        if (embedConfig?.footer?.text) {
+        if (embedConfig.footer?.text) {
             embed.setFooter({
                 text: embedConfig.footer.text,
                 iconURL: embedConfig.footer.iconURL || undefined,
             });
         }
 
-        if (embedConfig?.author?.name) {
+        if (embedConfig.author?.name) {
             embed.setAuthor({
                 name: embedConfig.author.name,
                 iconURL: embedConfig.author.iconURL || undefined,
@@ -221,9 +217,7 @@ export class TicketManager {
 
     public static async isUserSupport(interaction: any): Promise<boolean> {
         const { supportRoles } = await TicketManager.readConfigFile();
-
-        const memberRoles = interaction.member.roles.cache.map((role) => role.id);
-        return memberRoles.some((role) => supportRoles.includes(role));
+        return interaction.member.roles.cache.some((role: { id: Snowflake }) => supportRoles.includes(role.id));
     }
 
     public static async readConfigFile(): Promise<Config> {

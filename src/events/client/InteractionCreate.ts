@@ -17,12 +17,16 @@ import { LogsManager } from "../../utils/LogsManager.js";
 import { TicketManager } from "../../utils/TicketManager.js";
 
 export default class InteractionCreate extends Event {
+    private config: any;
+
     constructor(client: Bot, file: string) {
         super(client, file, { name: "interactionCreate" });
     }
 
     public async run(interaction: CommandInteraction | SelectMenuInteraction | ButtonInteraction): Promise<void> {
         try {
+            this.config = await TicketManager.readConfigFile();
+
             if (interaction.isCommand()) {
                 await this.handleCommandInteraction(interaction);
             } else if (interaction.isStringSelectMenu() && interaction.customId === "categoryMenu") {
@@ -63,7 +67,6 @@ export default class InteractionCreate extends Event {
         await interaction.deferReply({ ephemeral: true });
 
         try {
-            const { menuPlaceholder, maxActiveTicketsPerUser } = await TicketManager.readConfigFile();
             const selectMenuOptions = await this.client.db.get(interaction.guild.id);
 
             if (!selectMenuOptions?.selectMenuOptions) {
@@ -71,7 +74,7 @@ export default class InteractionCreate extends Event {
             }
 
             const parsedOptions = JSON.parse(selectMenuOptions.selectMenuOptions);
-            await this.updateSelectMenu(interaction, menuPlaceholder, parsedOptions);
+            await this.updateSelectMenu(interaction, this.config.menuPlaceholder, parsedOptions);
 
             const selectedOption = interaction.values[0];
             const category = parsedOptions.find((opt: any) => opt.value === selectedOption);
@@ -84,9 +87,9 @@ export default class InteractionCreate extends Event {
                 (channel) => channel.type === ChannelType.GuildText && channel.name.startsWith(`ticket-${interaction.user.username}`),
             );
 
-            if (userTickets.size >= maxActiveTicketsPerUser) {
+            if (userTickets.size >= this.config.maxActiveTicketsPerUser) {
                 await interaction.editReply({
-                    content: `You have reached the maximum limit of active tickets (${maxActiveTicketsPerUser}).`,
+                    content: `You have reached the maximum limit of active tickets (${this.config.maxActiveTicketsPerUser}).`,
                 });
                 return;
             }
@@ -99,18 +102,20 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+        const isSupport = await TicketManager.isUserSupport(interaction);
+
         switch (interaction.customId) {
             case "close-ticket":
-                await this.handleCloseTicketButton(interaction);
+                await this.handleCloseTicketButton(interaction, isSupport);
                 break;
             case "confirm-close-ticket":
                 await this.handleConfirmCloseTicketButton(interaction);
                 break;
             case "claim-ticket":
-                await this.handleClaimTicketButton(interaction);
+                await this.handleClaimTicketButton(interaction, isSupport);
                 break;
             case "unclaim-ticket":
-                await this.handleUnclaimTicketButton(interaction);
+                await this.handleUnclaimTicketButton(interaction, isSupport);
                 break;
             case "transcripts-ticket":
                 await this.handleTranscriptTicketButton(interaction);
@@ -118,8 +123,8 @@ export default class InteractionCreate extends Event {
         }
     }
 
-    private async handleClaimTicketButton(interaction: ButtonInteraction): Promise<void> {
-        if (!(await TicketManager.isUserSupport(interaction))) {
+    private async handleClaimTicketButton(interaction: ButtonInteraction, isSupport: boolean): Promise<void> {
+        if (!isSupport) {
             await interaction.reply({
                 content: "You do not have permission to claim this ticket.",
                 ephemeral: true,
@@ -145,8 +150,8 @@ export default class InteractionCreate extends Event {
         await this.updateClaimButton(interaction, interaction.user.username, "claimed");
     }
 
-    private async handleUnclaimTicketButton(interaction: ButtonInteraction): Promise<void> {
-        if (!(await TicketManager.isUserSupport(interaction))) {
+    private async handleUnclaimTicketButton(interaction: ButtonInteraction, isSupport: boolean): Promise<void> {
+        if (!isSupport) {
             await interaction.reply({
                 content: "You do not have permission to unclaim this ticket.",
                 ephemeral: true,
@@ -157,11 +162,8 @@ export default class InteractionCreate extends Event {
         await this.updateClaimButton(interaction, interaction.user.username, "unclaimed");
     }
 
-    private async handleCloseTicketButton(interaction: ButtonInteraction): Promise<void> {
-        const { closeTicketStaffOnly } = await TicketManager.readConfigFile();
-        const isSupport = await TicketManager.isUserSupport(interaction);
-
-        if (closeTicketStaffOnly && !isSupport) {
+    private async handleCloseTicketButton(interaction: ButtonInteraction, isSupport: boolean): Promise<void> {
+        if (this.config.closeTicketStaffOnly && !isSupport) {
             await interaction.reply({
                 content: "You do not have permission to close this ticket.",
                 ephemeral: true,
@@ -185,13 +187,11 @@ export default class InteractionCreate extends Event {
             .setDescription("Are you sure you want to close the ticket?")
             .setFooter({ text: "You have 60 seconds to respond." });
 
-        const message = await interaction.reply({
+        await interaction.reply({
             embeds: [embed],
             components: [confirmationButtons],
             ephemeral: true,
         });
-
-        let shouldDeleteMessage = true;
 
         const filter = (i: MessageComponentInteraction): boolean => i.customId === "confirm-close-ticket";
         const collector = interaction.channel.createMessageComponentCollector({
@@ -201,9 +201,8 @@ export default class InteractionCreate extends Event {
 
         collector.on("collect", async (i) => {
             if (i.customId === "confirm-close-ticket") {
-                shouldDeleteMessage = false;
                 collector.stop();
-                await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
+                // await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
             }
         });
 
@@ -215,28 +214,24 @@ export default class InteractionCreate extends Event {
 
         transcriptsCollector.on("collect", async (i) => {
             if (i.customId === "transcripts-ticket") {
-                shouldDeleteMessage = false;
                 transcriptsCollector.stop();
-                await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
+                // await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
             }
         });
 
         setTimeout(async () => {
             collector.stop();
             transcriptsCollector.stop();
-            if (shouldDeleteMessage) {
-                await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
-            }
+            // await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
         }, 60000);
     }
 
     private async handleConfirmCloseTicketButton(interaction: ButtonInteraction): Promise<void> {
-        const { enableTicketReason, enableNotifyTicketCreator } = await TicketManager.readConfigFile();
         const channel = interaction.channel as TextChannel;
         const categoryLabel = channel.topic?.match(/Ticket Type: (.+)/)?.[1] || "unknown";
         const ticketChannel = interaction.channel as TextChannel;
 
-        if (enableTicketReason) {
+        if (this.config.enableTicketReason) {
             await interaction.reply({
                 content: "Please provide a reason for closing the ticket within 1 minute.",
                 ephemeral: true,
@@ -259,7 +254,7 @@ export default class InteractionCreate extends Event {
                 const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
                 if (ticket) {
                     const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
-                    if (enableNotifyTicketCreator && creator) {
+                    if (this.config.enableNotifyTicketCreator && creator) {
                         await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
                         await this.sendRatingMenu(creator, ticketChannel);
                     } else if (!creator) {
@@ -299,7 +294,7 @@ export default class InteractionCreate extends Event {
             const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
             if (ticket) {
                 const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
-                if (enableNotifyTicketCreator && creator) {
+                if (this.config.enableNotifyTicketCreator && creator) {
                     await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
                     await this.sendRatingMenu(creator, ticketChannel);
                 } else if (!creator) {
@@ -331,6 +326,8 @@ export default class InteractionCreate extends Event {
     private async notifyTicketCreator(interaction: any, user: any, reason: string | null, ticketChannel: TextChannel): Promise<void> {
         try {
             const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
+            if (!ticket) throw new Error("Ticket information not found.");
+
             const reasonText = reason ? `\n\n**Reason:** ${reason}` : "";
             const { guild } = ticketChannel;
             const creator = interaction.guild.members.cache.find((member) => member.user.username === ticket.creator);
@@ -351,9 +348,10 @@ export default class InteractionCreate extends Event {
                 .setThumbnail(interaction.guild.iconURL({ format: "png", size: 1024 }))
                 .setFooter({ text: "Ticket System", iconURL: interaction.user.displayAvatarURL({ extension: "png", size: 1024 }) })
                 .setTimestamp();
+
             await user.send({ embeds: [embed] });
         } catch (error) {
-            this.client.logger.error("Failed to send DM to ticket creator:", error);
+            this.client.logger.error(`Failed to notify ticket creator: ${error.message}`);
         }
     }
 
@@ -384,7 +382,6 @@ export default class InteractionCreate extends Event {
     }
 
     private async handleRatingSelectMenu(interaction: SelectMenuInteraction): Promise<void> {
-        const channelId = interaction.customId.split("-")[1];
         const rating = parseInt(interaction.values[0], 10);
 
         if (isNaN(rating) || rating < 1 || rating > 5) {
@@ -392,10 +389,10 @@ export default class InteractionCreate extends Event {
                 content: "Invalid rating. Please select a rating between 1 and 5 stars.",
                 ephemeral: true,
             });
-            return;
         }
 
         try {
+            const channelId = interaction.customId.split("-")[1];
             await this.client.db.updateTicketStats(channelId, rating);
             await interaction.reply({
                 content: "Thank you for rating your support ticket experience!",
@@ -423,34 +420,33 @@ export default class InteractionCreate extends Event {
     }
 
     private async updateSelectMenu(interaction: SelectMenuInteraction, placeholder: string, options: any): Promise<void> {
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId("categoryMenu")
-            .setPlaceholder(placeholder)
-            .setMinValues(1)
-            .setMaxValues(1)
-            .addOptions(options);
+        const firstComponent = interaction.message.components[0].components[0];
 
-        const updatedActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
-        await interaction.message.edit({ components: [updatedActionRow] });
+        if (firstComponent instanceof StringSelectMenuBuilder) {
+            const selectMenu = firstComponent as StringSelectMenuBuilder;
+            selectMenu.setPlaceholder(placeholder).setOptions(options);
+            await interaction.message.edit({ components: interaction.message.components });
+        } else {
+            throw new Error("The component is not a StringSelectMenuBuilder.");
+        }
     }
 
     private async replyWithTicketCreationResult(interaction: any, channel: TextChannel | null): Promise<void> {
+        const embed = new EmbedBuilder().setColor("#00FF00").setTimestamp();
+
         if (channel) {
-            await interaction.editReply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("#00FF00")
-                        .setTitle("Ticket Created")
-                        .setDescription(`Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`)
-                        .setFooter({ text: "Ticket System", iconURL: interaction.user.displayAvatarURL({ extension: "png", size: 1024 }) })
-                        .setTimestamp(),
-                ],
-            });
+            embed
+                .setTitle("Ticket Created")
+                .setDescription(`Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`)
+                .setFooter({ text: "Ticket System", iconURL: interaction.user.displayAvatarURL({ extension: "png", size: 1024 }) });
         } else {
-            await interaction.editReply({
-                content: "Failed to create the ticket. Please try again later.",
-            });
+            embed
+                .setTitle("Ticket Creation Failed")
+                .setDescription("Failed to create the ticket. Please try again later.")
+                .setColor("#FF0000");
         }
+
+        await interaction.editReply({ embeds: [embed] });
     }
 
     private async updateClaimButton(interaction: any, userName: string, action: string): Promise<void> {

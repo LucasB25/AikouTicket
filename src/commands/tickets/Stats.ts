@@ -1,20 +1,14 @@
 import { type Bot, Command, type Context } from "../../structures/index.js";
 import { EmbedBuilder } from "discord.js";
 
-export default class TicketStats extends Command {
+export default class Stats extends Command {
     constructor(client: Bot) {
         super(client, {
-            name: "ticketstats",
-            nameLocalizations: {
-                fr: "statistiquestickets",
-            },
+            name: "stats",
             description: {
                 content: "Get the current ticket statistics",
-                usage: "ticketstats",
-                examples: ["ticketstats"],
-            },
-            descriptionLocalizations: {
-                fr: "Obtenez les statistiques actuelles des tickets.",
+                usage: "stats",
+                examples: ["stats"],
             },
             category: "general",
             permissions: {
@@ -31,13 +25,15 @@ export default class TicketStats extends Command {
         try {
             const allTicketStats = await this.client.db.getAllTicketStats();
 
-            if (allTicketStats.length === 0) {
+            if (!allTicketStats?.length) {
                 await ctx.sendMessage({ content: "No ticket statistics available." });
                 return;
             }
 
-            const totalRatings = allTicketStats.reduce((sum, stat) => sum + stat.rating, 0);
-            const averageRating = totalRatings / allTicketStats.length;
+            const validRatings = allTicketStats.filter(({ rating }) => rating > 0);
+
+            const totalRatings = validRatings.reduce((sum, { rating }) => sum + rating, 0);
+            const averageRating = validRatings.length > 0 ? (totalRatings / validRatings.length).toFixed(2) : "N/A";
 
             const embed = new EmbedBuilder()
                 .setTitle("Ticket Statistics")
@@ -45,7 +41,7 @@ export default class TicketStats extends Command {
                 .addFields(
                     { name: "Total Tickets", value: `${allTicketStats.length}`, inline: true },
                     { name: "Total Ratings", value: `${totalRatings}`, inline: true },
-                    { name: "Average Rating", value: `${averageRating.toFixed(2)}`, inline: true },
+                    { name: "Average Rating", value: `${averageRating}`, inline: true },
                 )
                 .setTimestamp();
 

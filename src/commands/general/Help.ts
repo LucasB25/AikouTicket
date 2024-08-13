@@ -4,16 +4,10 @@ export default class Help extends Command {
     constructor(client: Bot) {
         super(client, {
             name: "help",
-            nameLocalizations: {
-                fr: "aide",
-            },
             description: {
                 content: "Lists all available commands",
                 usage: "help",
                 examples: ["help"],
-            },
-            descriptionLocalizations: {
-                fr: "Liste toutes les commandes disponibles",
             },
             category: "general",
             permissions: {

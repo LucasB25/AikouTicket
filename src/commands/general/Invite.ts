@@ -4,16 +4,10 @@ export default class Invite extends Command {
     constructor(client: Bot) {
         super(client, {
             name: "invite",
-            nameLocalizations: {
-                fr: "invite",
-            },
             description: {
                 content: "Get the bot invite link",
                 usage: "invite",
                 examples: ["invite"],
-            },
-            descriptionLocalizations: {
-                fr: "Afficher le lien d'invitation.",
             },
             category: "general",
             permissions: {

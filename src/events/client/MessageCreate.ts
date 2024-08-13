@@ -1,5 +1,4 @@
 import { type Message, TextChannel } from "discord.js";
-
 import { type Bot, Event } from "../../structures/index.js";
 import { TicketManager } from "../../utils/TicketManager.js";
 
@@ -26,13 +25,13 @@ export default class MessageCreate extends Event {
 
     public async run(message: Message): Promise<void> {
         if (message.channel instanceof TextChannel) {
+            const { id: channelId } = message.channel;
             try {
-                const ticketInfo = await this.client.db.getTicketInfo(message.channel.id);
-                if (ticketInfo) {
-                    await this.client.db.updateActivity(message.channel.id);
+                if (await this.client.db.getTicketInfo(channelId)) {
+                    await this.client.db.updateActivity(channelId);
                 }
             } catch (error) {
-                this.client.logger.error(`Error updating activity for channel ${message.channel.id}:`, error);
+                this.client.logger.error(`Error updating activity for channel ${channelId}:`, error);
             }
         }
     }
@@ -43,31 +42,29 @@ export default class MessageCreate extends Event {
 
         const tickets = await this.client.db.getAllTickets();
         const now = BigInt(Date.now());
-        const intervalMilliseconds = BigInt((ticketActivityCheckInterval || 60) * 60 * 1000);
+        const intervalMilliseconds = BigInt(ticketActivityCheckInterval * 60 * 1000);
 
-        for (const ticket of tickets) {
-            const lastActivity = BigInt(ticket.activityAt);
-            const lastCheckTime = BigInt(ticket.lastCheckTime ?? 0);
+        for (const { activityAt, lastCheckTime = 0n, channelId } of tickets) {
+            const lastActivity = BigInt(activityAt);
 
             if (now - lastActivity > intervalMilliseconds && now - lastCheckTime > intervalMilliseconds) {
-                const channel = this.client.channels.cache.get(ticket.channelId) as TextChannel;
-                if (channel) {
-                    try {
-                        const ticketInfo = await this.client.db.getTicketInfo(channel.id);
-                        if (!ticketInfo) continue;
+                const channel = this.client.channels.cache.get(channelId) as TextChannel | undefined;
+                if (!channel) continue;
 
-                        const { creator } = ticketInfo;
-                        const authorMention = `<@${creator}>`;
-                        const supportMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
+                try {
+                    const ticketInfo = await this.client.db.getTicketInfo(channel.id);
+                    if (!ticketInfo) continue;
 
-                        await channel.send({
-                            content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n${authorMention}, ${supportMentions}`,
-                        });
-                        await this.client.db.updateActivity(channel.id);
-                        await this.client.db.updateLastCheckTime(channel.id, now);
-                    } catch (error) {
-                        this.client.logger.error(`Error sending message in channel ${channel.id}:`, error);
-                    }
+                    const { creator } = ticketInfo;
+                    const supportMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
+
+                    await channel.send({
+                        content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n<@${creator}>, ${supportMentions}`,
+                    });
+                    await this.client.db.updateActivity(channel.id);
+                    await this.client.db.updateLastCheckTime(channel.id, now);
+                } catch (error) {
+                    this.client.logger.error(`Error sending message in channel ${channel.id}:`, error);
                 }
             }
         }

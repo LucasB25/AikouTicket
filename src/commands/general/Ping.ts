@@ -4,16 +4,10 @@ export default class Ping extends Command {
     constructor(client: Bot) {
         super(client, {
             name: "ping",
-            nameLocalizations: {
-                fr: "ping",
-            },
             description: {
                 content: "Get the bot latency",
                 usage: "ping",
                 examples: ["ping"],
-            },
-            descriptionLocalizations: {
-                fr: "Obtiens la latence du bot.",
             },
             category: "general",
             permissions: {
