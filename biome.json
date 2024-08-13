@@ -1,81 +1,80 @@
 {
-    "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
-    "organizeImports": {
-      "enabled": true
-    },
-    "linter": {
-      "enabled": true,
-      "rules": {
-        "all": true,
-        "suspicious": {
-          "noExplicitAny": "off",
-          "noConfusingVoidType": "off",
-          "noGlobalIsFinite": "off",
-          "noGlobalIsNan": "off",
-          "noEmptyBlockStatements": "off"
-        },
-        "style": {
-          "noNonNullAssertion": "off",
-          "noParameterAssign": "off",
-          "noInferrableTypes": "off",
-          "useNumberNamespace": "off",
-          "noDefaultExport": "off",
-          "useBlockStatements": "off",
-          "useFilenamingConvention": "off",
-          "useNamingConvention": "off",
-          "useSingleCaseStatement": "off"
-        },
-        "complexity": {
-          "noBannedTypes": "off",
-          "noForEach": "off",
-          "noExcessiveCognitiveComplexity": {
-            "level": "warn",
-            "options": {
-              "maxAllowedComplexity": 255
-            }
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "all": true,
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noConfusingVoidType": "off",
+        "noGlobalIsFinite": "off",
+        "noGlobalIsNan": "off",
+        "noEmptyBlockStatements": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "noParameterAssign": "off",
+        "noInferrableTypes": "off",
+        "useNumberNamespace": "off",
+        "noDefaultExport": "off",
+        "useBlockStatements": "off",
+        "useFilenamingConvention": "off",
+        "useNamingConvention": "off",
+        "useSingleCaseStatement": "off"
+      },
+      "complexity": {
+        "noBannedTypes": "off",
+        "noForEach": "off",
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": {
+            "maxAllowedComplexity": 255
           }
-        },
-        "security": {
-          "noGlobalEval": "off"
-        },
-        "correctness": {
-          "noVoidTypeReturn": "off"
-        },
-        "performance": {
-          "noBarrelFile": "off"
         }
+      },
+      "security": {
+        "noGlobalEval": "off"
+      },
+      "correctness": {
+        "noVoidTypeReturn": "off"
+      },
+      "performance": {
+        "noBarrelFile": "off"
       }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentWidth": 4,
+    "indentStyle": "space",
+    "lineEnding": "crlf",
+    "lineWidth": 140,
+    "formatWithErrors": true
+  },
+  "json": {
+    "linter": {
+      "enabled": true
     },
     "formatter": {
       "enabled": true,
-      "indentWidth": 4,
-      "indentStyle": "space",
+      "indentWidth": 2,
       "lineEnding": "crlf",
-      "lineWidth": 140,
-      "formatWithErrors": true
-    },
-    "json": {
-      "linter": {
-        "enabled": true
-      },
-      "formatter": {
-        "enabled": true,
-        "indentWidth": 2,
-        "lineEnding": "crlf",
-        "lineWidth": 80
-      }
-    },
-    "javascript": {
-      "formatter": {
-        "quoteStyle": "double",
-        "arrowParentheses": "always",
-        "bracketSameLine": true,
-        "semicolons": "always"
-      }
-    },
-    "files": {
-      "ignoreUnknown": true,
-      "ignore": [".vscode", "dist", "node_modules"]
+      "lineWidth": 80
     }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "arrowParentheses": "always",
+      "bracketSameLine": true,
+      "semicolons": "always"
+    }
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "ignore": [".vscode", "dist", "node_modules"]
   }
-  
+}

@@ -1,4 +1,12 @@
-import { type ButtonInteraction, type CommandInteraction, EmbedBuilder, type GuildChannel, TextChannel } from "discord.js";
+import {
+    type ButtonInteraction,
+    type CommandInteraction,
+    EmbedBuilder,
+    type GuildChannel,
+    TextChannel,
+    type StringSelectMenuInteraction,
+    type Snowflake,
+} from "discord.js";
 import discordTranscripts from "discord-html-transcripts";
 
 import type { Bot } from "../structures/index.js";
@@ -44,6 +52,29 @@ export class LogsManager {
             await LogsManager.sendTranscript(transcriptLogsChannel, embed, ticketChannel as TextChannel, client);
         } catch (error) {
             client.logger.error("Failed to log ticket transcript:", error);
+        }
+    }
+
+    public static async logTicketRating(
+        interaction: CommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
+        client: Bot,
+        ticketChannel: GuildChannel,
+        rating: number,
+        ratingLogChannelId: Snowflake,
+    ): Promise<void> {
+        try {
+            const ratingLogChannel = await LogsManager.getChannelById(client, ratingLogChannelId);
+
+            const ticketInfo = await client.db.getTicketInfo(ticketChannel.id);
+            const ticketCreator = ticketInfo?.creator ?? interaction.user.username;
+
+            const description = `- **Ticket:** \n> ${ticketChannel.toString()} \n> (${ticketChannel.name} - ID: ${ticketChannel.id})\n\n- **Rating:** \n> ${rating} stars`;
+
+            const embed = LogsManager.createLogEmbed(interaction, ticketCreator, "#F1C40F", "⭐ Ticket Rating", description);
+
+            await ratingLogChannel.send({ embeds: [embed] });
+        } catch (error) {
+            client.logger.error("Failed to log ticket rating:", error);
         }
     }
 
@@ -98,7 +129,7 @@ export class LogsManager {
     }
 
     private static createLogEmbed(
-        interaction: CommandInteraction | ButtonInteraction,
+        interaction: CommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
         userName: string,
         color: string,
         title: string,

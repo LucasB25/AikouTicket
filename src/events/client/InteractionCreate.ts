@@ -10,6 +10,7 @@ import {
     type SelectMenuInteraction,
     StringSelectMenuBuilder,
     type TextChannel,
+    type GuildChannel,
 } from "discord.js";
 
 import { type Bot, Context, Event } from "../../structures/index.js";
@@ -396,6 +397,14 @@ export default class InteractionCreate extends Event {
             const channelId = interaction.customId.split("-")[1];
 
             await this.client.db.updateTicketStats(channelId, rating);
+
+            await LogsManager.logTicketRating(
+                interaction,
+                this.client,
+                interaction.channel as GuildChannel,
+                rating,
+                this.config.ratingLogChannelId,
+            );
 
             await interaction.reply({
                 content: "Thank you for rating your support ticket experience!",

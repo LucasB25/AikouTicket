@@ -21,6 +21,7 @@ import { LogsManager } from "./LogsManager.js";
 interface Config {
     supportRoles: Snowflake[];
     ticketCategoryId: Snowflake;
+    ticketLogChannelId: Snowflake;
     maxActiveTicketsPerUser: number;
     menuPlaceholder: string;
     enableClaimButton: boolean;

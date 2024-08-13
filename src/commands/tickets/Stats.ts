@@ -40,7 +40,7 @@ export default class Stats extends Command {
                 .setColor("#FFD700")
                 .addFields(
                     { name: "Total Tickets", value: `${allTicketStats.length}`, inline: true },
-                    { name: "Total Ratings", value: `${totalRatings}`, inline: true },
+                    { name: "Total Stars", value: `${totalRatings}`, inline: true },
                     { name: "Average Rating", value: `${averageRating}`, inline: true },
                 )
                 .setTimestamp();
