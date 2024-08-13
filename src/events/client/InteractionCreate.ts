@@ -389,11 +389,14 @@ export default class InteractionCreate extends Event {
                 content: "Invalid rating. Please select a rating between 1 and 5 stars.",
                 ephemeral: true,
             });
+            return;
         }
 
         try {
             const channelId = interaction.customId.split("-")[1];
+
             await this.client.db.updateTicketStats(channelId, rating);
+
             await interaction.reply({
                 content: "Thank you for rating your support ticket experience!",
                 ephemeral: true,
@@ -420,25 +423,22 @@ export default class InteractionCreate extends Event {
     }
 
     private async updateSelectMenu(interaction: SelectMenuInteraction, placeholder: string, options: any): Promise<void> {
-        const firstComponent = interaction.message.components[0].components[0];
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId("categoryMenu")
+            .setPlaceholder(placeholder)
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions(options);
 
-        if (firstComponent instanceof StringSelectMenuBuilder) {
-            const selectMenu = firstComponent as StringSelectMenuBuilder;
-            selectMenu.setPlaceholder(placeholder).setOptions(options);
-            await interaction.message.edit({ components: interaction.message.components });
-        } else {
-            throw new Error("The component is not a StringSelectMenuBuilder.");
-        }
+        const updatedActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+        await interaction.message.edit({ components: [updatedActionRow] });
     }
 
     private async replyWithTicketCreationResult(interaction: any, channel: TextChannel | null): Promise<void> {
-        const embed = new EmbedBuilder().setColor("#00FF00").setTimestamp();
+        const embed = new EmbedBuilder().setColor("#00FF00");
 
         if (channel) {
-            embed
-                .setTitle("Ticket Created")
-                .setDescription(`Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`)
-                .setFooter({ text: "Ticket System", iconURL: interaction.user.displayAvatarURL({ extension: "png", size: 1024 }) });
+            embed.setDescription(`Your new ticket ${channel.toString()} has been created, ${interaction.user.username}!`);
         } else {
             embed
                 .setTitle("Ticket Creation Failed")
