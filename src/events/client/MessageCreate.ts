@@ -47,7 +47,7 @@ export default class MessageCreate extends Event {
         for (const { activityAt, lastCheckTime = 0n, channelId } of tickets) {
             const lastActivity = BigInt(activityAt);
 
-            if (now - lastActivity > intervalMilliseconds && now - lastCheckTime > intervalMilliseconds) {
+            if (now - lastActivity > intervalMilliseconds && now - BigInt(lastCheckTime) > intervalMilliseconds) {
                 const channel = this.client.channels.cache.get(channelId) as TextChannel | undefined;
                 if (!channel) continue;
 

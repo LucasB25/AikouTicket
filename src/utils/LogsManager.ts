@@ -12,7 +12,6 @@ import discordTranscripts from "discord-html-transcripts";
 import type { Bot } from "../structures/index.js";
 import { TicketManager } from "./TicketManager.js";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class LogsManager {
     public static async logTicketCreation(
         interaction: CommandInteraction | ButtonInteraction,

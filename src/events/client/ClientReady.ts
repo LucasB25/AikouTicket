@@ -7,7 +7,6 @@ export default class ClientReady extends Event {
         });
     }
 
-    // biome-ignore lint/suspicious/useAwait: <explanation>
     public async run(): Promise<void> {
         this.client.logger.info(`Connected to Discord as ${this.client.user?.tag}!`);
 

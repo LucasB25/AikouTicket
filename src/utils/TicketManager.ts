@@ -12,7 +12,6 @@ import {
     type Snowflake,
     TextChannel,
 } from "discord.js";
-// biome-ignore lint/correctness/noNodejsModules: <explanation>
 import { promises as fs } from "node:fs";
 import YAML from "yaml";
 
@@ -63,7 +62,6 @@ interface Config {
     };
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class TicketManager {
     public static async createTicket(
         interaction: CommandInteraction | ButtonInteraction,
@@ -96,7 +94,8 @@ export class TicketManager {
             const claimButton = TicketManager.createClaimButton(enableClaimButton);
 
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton, ...(claimButton ? [claimButton] : []));
-            const messageContent = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
+
+            const messageContent = [...supportRoles.map((roleId) => `<@&${roleId}>`), `<@${interaction.user.id}>`].join(", ");
 
             const message = await channel.send({ content: messageContent, embeds: [embed], components: [row] });
             await message.pin();
