@@ -45,6 +45,11 @@ export default class MessageCreate extends Event {
         const intervalMilliseconds = BigInt(ticketActivityCheckInterval * 60 * 1000);
 
         for (const { activityAt, lastCheckTime = 0n, channelId } of tickets) {
+            if (activityAt === null || lastCheckTime === null) {
+                this.client.logger.error(`Ticket ${channelId} has null activityAt or lastCheckTime.`);
+                continue;
+            }
+
             const lastActivity = BigInt(activityAt);
 
             if (now - lastActivity > intervalMilliseconds && now - BigInt(lastCheckTime) > intervalMilliseconds) {
