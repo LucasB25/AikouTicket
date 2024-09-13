@@ -34,8 +34,8 @@ export default class ServerData {
         await this.prisma.ticketsInfo
             .upsert({
                 where: { channelId },
-                update: { creator, createdAt: currentTime, activityAt: currentTime },
-                create: { channelId, creator, createdAt: currentTime, activityAt: currentTime },
+                update: { creator, createdAt: currentTime, activityAt: currentTime, lastCheckTime: currentTime },
+                create: { channelId, creator, createdAt: currentTime, activityAt: currentTime, lastCheckTime: currentTime },
             })
             .catch((error) => console.error("Error saving ticket info:", error));
     }
@@ -56,10 +56,14 @@ export default class ServerData {
     }
 
     public async updateLastCheckTime(channelId: string, lastCheckTime: bigint): Promise<void> {
+        console.log(`Updating lastCheckTime for channel ${channelId} to ${lastCheckTime}`);
         await this.prisma.ticketsInfo
             .update({
                 where: { channelId },
                 data: { lastCheckTime },
+            })
+            .then(() => {
+                console.log(`Successfully updated lastCheckTime for channel ${channelId}`);
             })
             .catch((error) => console.error(`Error updating last check time for channel ${channelId}:`, error));
     }

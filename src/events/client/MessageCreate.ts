@@ -25,13 +25,9 @@ export default class MessageCreate extends Event {
 
     public async run(message: Message): Promise<void> {
         if (message.channel instanceof TextChannel) {
-            const { id: channelId } = message.channel;
-            try {
-                if (await this.client.db.getTicketInfo(channelId)) {
-                    await this.client.db.updateActivity(channelId);
-                }
-            } catch (error) {
-                this.client.logger.error(`Error updating activity for channel ${channelId}:`, error);
+            const ticketInfo = await this.client.db.getTicketInfo(message.channel.id);
+            if (ticketInfo) {
+                await this.client.db.updateActivity(message.channel.id);
             }
         }
     }
@@ -44,19 +40,13 @@ export default class MessageCreate extends Event {
         const now = BigInt(Date.now());
         const intervalMilliseconds = BigInt(ticketActivityCheckInterval * 60 * 1000);
 
-        for (const { activityAt, lastCheckTime = 0n, channelId } of tickets) {
-            if (activityAt === null || lastCheckTime === null) {
-                this.client.logger.error(`Ticket ${channelId} has null activityAt or lastCheckTime.`);
-                continue;
-            }
+        for (const ticket of tickets) {
+            const lastActivity = BigInt(ticket.activityAt);
+            const lastCheckTime = BigInt(ticket.lastCheckTime ?? 0);
 
-            const lastActivity = BigInt(activityAt);
-
-            if (now - lastActivity > intervalMilliseconds && now - BigInt(lastCheckTime) > intervalMilliseconds) {
-                const channel = this.client.channels.cache.get(channelId) as TextChannel | undefined;
-                if (!channel) continue;
-
-                try {
+            if (now - lastActivity > intervalMilliseconds && now - lastCheckTime > intervalMilliseconds) {
+                const channel = this.client.channels.cache.get(ticket.channelId) as TextChannel;
+                if (channel) {
                     const ticketInfo = await this.client.db.getTicketInfo(channel.id);
                     if (!ticketInfo) continue;
 
@@ -64,12 +54,11 @@ export default class MessageCreate extends Event {
                     const supportMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
 
                     await channel.send({
-                        content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n<@${creator}>, ${supportMentions}`,
+                        content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n${creator}, ${supportMentions}`,
                     });
+
                     await this.client.db.updateActivity(channel.id);
                     await this.client.db.updateLastCheckTime(channel.id, now);
-                } catch (error) {
-                    this.client.logger.error(`Error sending message in channel ${channel.id}:`, error);
                 }
             }
         }

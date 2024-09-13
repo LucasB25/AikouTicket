@@ -4,7 +4,7 @@
 
 maxActiveTicketsPerUser: 1  # Maximum number of active tickets allowed per user
 menuPlaceholder: 'Select a category to open a ticket.'  # Placeholder text displayed in the select menu for opening tickets
-ticketActivityCheckInterval: 1440  # Interval in minutes for checking the activity of tickets
+ticketActivityCheckInterval: 2880  # Interval in minutes for checking the activity of tickets
 
 # Roles with access to ticket channels
 supportRoles:

@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es2023",
-    "module": "es2022",
-    "lib": ["es2023"],
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext"],
     "declaration": true,
     "sourceMap": true,
+    "newLine": "crlf",
     "outDir": "dist",
     "rootDir": "src",
     "strict": false,

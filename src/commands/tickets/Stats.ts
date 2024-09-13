@@ -25,7 +25,7 @@ export default class Stats extends Command {
         try {
             const allTicketStats = await this.client.db.getAllTicketStats();
 
-            if (!allTicketStats?.length) {
+            if (allTicketStats?.length === 0) {
                 await ctx.sendMessage({ content: "No ticket statistics available." });
                 return;
             }

@@ -19,10 +19,9 @@ model ticketStats {
 }
 
 model ticketsInfo {
-  id                    String      @id @default(uuid())
-  channelId             String      @unique
-  creator               String
-  createdAt             BigInt
-  activityAt            BigInt
-  lastCheckTime         BigInt?
+  channelId     String   @id
+  creator       String
+  createdAt     BigInt
+  activityAt    BigInt
+  lastCheckTime BigInt?
 }

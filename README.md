@@ -76,13 +76,13 @@ Open `config.yml` to configure the settings and messages to your liking, make su
 6. generate the prisma client
 
 ```bash
-npm run prisma:push
+npm run db:push
 ```
 
 Run the migrations (Only if you want to migrate your database)
 
 ```bash
-npm run prisma:migrate
+npm run db:migrate
 ```
 
 8. Run the bot:

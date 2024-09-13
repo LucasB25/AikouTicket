@@ -17,6 +17,7 @@ import {
     type PartialDMChannel,
     type TextChannel,
     type User,
+    ChannelType,
 } from "discord.js";
 
 export default class Context {
@@ -39,7 +40,11 @@ export default class Context {
         this.ctx = ctx;
         this.interaction = ctx instanceof ChatInputCommandInteraction ? ctx : null;
         this.message = ctx instanceof Message ? ctx : null;
-        this.channel = ctx.channel;
+        if (ctx.channel && ctx.channel.type !== ChannelType.GroupDM) {
+            this.channel = ctx.channel;
+        } else {
+            this.channel = null;
+        }
         this.id = ctx.id;
         this.channelId = ctx.channelId;
         this.client = ctx.client as Bot;
