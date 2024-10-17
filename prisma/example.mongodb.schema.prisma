@@ -28,6 +28,7 @@ model ticketsInfo {
   id                    String      @id @default(cuid()) @map("_id")
   channelId             String      @unique
   creator               String
+  creatorId             String
   createdAt             BigInt
   activityAt            BigInt
   lastCheckTime         BigInt?

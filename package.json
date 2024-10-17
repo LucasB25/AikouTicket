@@ -23,10 +23,10 @@
   },
   "homepage": "https://github.com/LucasB25/AikouTicket#readme",
   "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "@types/node": "^22.5.4",
+    "@biomejs/biome": "^1.9.3",
+    "@types/node": "^22.7.6",
     "@types/signale": "^1.4.7",
-    "prisma": "^5.19.1",
+    "prisma": "^5.21.0",
     "ts-node": "^10.9.2"
   },
   "keywords": ["discord", "bot", "support", "tickets", "typescript"],
@@ -42,12 +42,12 @@
     "underlineLabel": true
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1",
+    "@prisma/client": "^5.21.0",
     "discord-html-transcripts": "^3.2.0",
-    "discord.js": "^14.16.2",
+    "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "path": "^0.12.7",
     "signale": "^1.4.0",
-    "yaml": "^2.5.1"
+    "yaml": "^2.6.0"
   }
 }

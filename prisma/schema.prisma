@@ -21,6 +21,7 @@ model ticketStats {
 model ticketsInfo {
   channelId     String   @id
   creator       String
+  creatorId     String
   createdAt     BigInt
   activityAt    BigInt
   lastCheckTime BigInt?

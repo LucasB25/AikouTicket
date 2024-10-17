@@ -50,11 +50,11 @@ export default class MessageCreate extends Event {
                     const ticketInfo = await this.client.db.getTicketInfo(channel.id);
                     if (!ticketInfo) continue;
 
-                    const { creator } = ticketInfo;
+                    const { creatorId } = ticketInfo;
                     const supportMentions = supportRoles.map((roleId) => `<@&${roleId}>`).join(", ");
 
                     await channel.send({
-                        content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n${creator}, ${supportMentions}`,
+                        content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n<@${creatorId}>, ${supportMentions}`,
                     });
 
                     await this.client.db.updateActivity(channel.id);

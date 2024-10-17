@@ -70,6 +70,7 @@ export class TicketManager {
     ): Promise<TextChannel | null> {
         try {
             const { supportRoles, ticketCategoryId, ticketCategories, enableClaimButton } = await TicketManager.readConfigFile();
+            const userId = interaction.user.id;
             const userName = interaction.user.username.toLowerCase();
             const categoryConfig = ticketCategories[categoryLabel.toLowerCase()];
 
@@ -95,14 +96,14 @@ export class TicketManager {
 
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton, ...(claimButton ? [claimButton] : []));
 
-            const messageContent = [...supportRoles.map((roleId) => `<@&${roleId}>`), `<@${interaction.user.id}>`].join(", ");
+            const messageContent = [...supportRoles.map((roleId) => `<@&${roleId}>`), `<@${userId}>`].join(", ");
 
             const message = await channel.send({ content: messageContent, embeds: [embed], components: [row] });
             await message.pin();
             await message.channel.bulkDelete(1);
 
             await LogsManager.logTicketCreation(interaction, categoryLabel, client, channel);
-            await client.db.saveTicketInfo(channel.id, userName);
+            await client.db.saveTicketInfo(channel.id, userName, userId);
             await client.db.saveTicketStats(channel.id);
 
             return channel;

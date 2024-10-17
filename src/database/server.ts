@@ -29,13 +29,13 @@ export default class ServerData {
         return await this.prisma.ticketsInfo.findUnique({ where: { channelId } });
     }
 
-    public async saveTicketInfo(channelId: string, creator: string): Promise<void> {
+    public async saveTicketInfo(channelId: string, creator: string, creatorId: string): Promise<void> {
         const currentTime = BigInt(Date.now());
         await this.prisma.ticketsInfo
             .upsert({
                 where: { channelId },
-                update: { creator, createdAt: currentTime, activityAt: currentTime, lastCheckTime: currentTime },
-                create: { channelId, creator, createdAt: currentTime, activityAt: currentTime, lastCheckTime: currentTime },
+                update: { creator, creatorId, createdAt: currentTime, activityAt: currentTime, lastCheckTime: currentTime },
+                create: { channelId, creator, creatorId, createdAt: currentTime, activityAt: currentTime, lastCheckTime: currentTime },
             })
             .catch((error) => console.error("Error saving ticket info:", error));
     }
