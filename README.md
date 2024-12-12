@@ -18,7 +18,7 @@
   <p align="center">AikouTicket and TypeScript.
     <br />
     <br />
-        <a href="https://discord.gg/AhUJa2kdAr">Serveur Support</a>
+        <a href="https://discord.gg/nvcznzhkTF">Serveur Support</a>
     ·
     <a href="https://github.com/LucasB25/AikouTicket/issues">Report Bug & Request Feature</a>
   </p>
