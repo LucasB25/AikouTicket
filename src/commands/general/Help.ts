@@ -27,26 +27,26 @@ export default class Help extends Command {
 			if (!categories.has(cmd.category)) {
 				categories.set(cmd.category, []);
 			}
-			categories.get(cmd.category)?.push({
-				name: cmd.name,
-				description: cmd.description.content,
-			});
+			categories.get(cmd.category)!.push({ name: cmd.name, description: cmd.description.content });
 		});
 
-		let commandList = '';
-		categories.forEach((commands, category) => {
-			commandList += `\n**${category.charAt(0).toUpperCase() + category.slice(1)}**\n`;
-			commandList += commands.map(cmd => `\`${cmd.name}\`: ${cmd.description}`).join('\n');
-			commandList += '\n';
+		const commandList = Array.from(
+			categories,
+			([category, commands]) =>
+				`**${category.charAt(0).toUpperCase() + category.slice(1)}**\n${commands
+					.map(cmd => `\`${cmd.name}\`: ${cmd.description}`)
+					.join('\n')}\n`,
+		).join('\n');
+
+		await ctx.sendMessage({
+			embeds: [
+				this.client
+					.embed()
+					.setAuthor({ name: this.client.user?.username })
+					.setTitle('Help - List of Commands')
+					.setDescription(commandList)
+					.setTimestamp(),
+			],
 		});
-
-		const embed = this.client
-			.embed()
-			.setAuthor({ name: this.client.user?.username })
-			.setTitle('Help - List of Commands')
-			.setDescription(commandList)
-			.setTimestamp();
-
-		await ctx.sendMessage({ embeds: [embed] });
 	}
 }

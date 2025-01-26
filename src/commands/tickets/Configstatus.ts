@@ -64,12 +64,16 @@ export default class ConfigStatus extends Command {
 			const collector = message.createMessageComponentCollector({ time: 60000 });
 			collector.on('collect', async interaction => {
 				const index = ['main', 'logs', 'active'].indexOf(interaction.customId);
-				if (index !== -1) await interaction.update({ embeds: [embeds[index]], components: [rows[index]] });
+				if (index !== -1) {
+					await interaction.update({ embeds: [embeds[index]], components: [rows[index]] });
+				}
 			});
 
-			collector.on('end', () => message.edit({ components: [] }));
+			collector.on('end', async () => {
+				if (message.editable) await message.edit({ components: [] });
+			});
 		} catch {
-			await ctx.sendMessage({ content: 'There was an error retrieving the configuration.' });
+			await ctx.sendErrorMessage('There was an error retrieving the configuration.');
 		}
 	}
 
@@ -79,21 +83,13 @@ export default class ConfigStatus extends Command {
 
 	createRow(current: string): ActionRowBuilder<ButtonBuilder> {
 		return new ActionRowBuilder<ButtonBuilder>().addComponents(
-			new ButtonBuilder()
-				.setCustomId('main')
-				.setLabel('Main Configuration')
-				.setStyle(ButtonStyle.Primary)
-				.setDisabled(current === 'main'),
-			new ButtonBuilder()
-				.setCustomId('logs')
-				.setLabel('Logs Configuration')
-				.setStyle(ButtonStyle.Primary)
-				.setDisabled(current === 'logs'),
-			new ButtonBuilder()
-				.setCustomId('active')
-				.setLabel('Active Configuration')
-				.setStyle(ButtonStyle.Primary)
-				.setDisabled(current === 'active'),
+			['main', 'logs', 'active'].map(id =>
+				new ButtonBuilder()
+					.setCustomId(id)
+					.setLabel(`${id.charAt(0).toUpperCase()}${id.slice(1)} Configuration`)
+					.setStyle(ButtonStyle.Primary)
+					.setDisabled(current === id),
+			),
 		);
 	}
 }

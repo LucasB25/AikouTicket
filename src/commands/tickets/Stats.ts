@@ -24,31 +24,29 @@ export default class Stats extends Command {
 	async run(_client: Bot, ctx: Context): Promise<void> {
 		try {
 			const allTicketStats = await this.client.db.getAllTicketStats();
-
-			if (allTicketStats?.length === 0) {
-				await ctx.sendMessage({ content: 'No ticket statistics available.' });
-				return;
+			if (!allTicketStats?.length) {
+				await ctx.sendErrorMessage('No ticket statistics available.');
 			}
 
 			const validRatings = allTicketStats.filter(({ rating }) => rating > 0);
-
 			const totalRatings = validRatings.reduce((sum, { rating }) => sum + rating, 0);
-			const averageRating = validRatings.length > 0 ? (totalRatings / validRatings.length).toFixed(2) : 'N/A';
+			const averageRating = validRatings.length ? (totalRatings / validRatings.length).toFixed(2) : 'N/A';
 
-			const embed = new EmbedBuilder()
-				.setTitle('Ticket Statistics')
-				.setColor('#FFD700')
-				.addFields(
-					{ name: 'Total Tickets', value: `${allTicketStats.length}`, inline: true },
-					{ name: 'Total Stars', value: `${totalRatings}`, inline: true },
-					{ name: 'Average Rating', value: `${averageRating}`, inline: true },
-				)
-				.setTimestamp();
-
-			await ctx.sendMessage({ embeds: [embed] });
+			await ctx.sendMessage({
+				embeds: [
+					new EmbedBuilder()
+						.setTitle('Ticket Statistics')
+						.addFields(
+							{ name: 'Total Tickets', value: `${allTicketStats.length}`, inline: true },
+							{ name: 'Total Stars', value: `${totalRatings}`, inline: true },
+							{ name: 'Average Rating', value: `${averageRating}`, inline: true },
+						)
+						.setTimestamp(),
+				],
+			});
 		} catch (error) {
 			this.client.logger.error(`Failed to retrieve ticket statistics: ${error.message}`);
-			await ctx.sendMessage({ content: 'There was an error retrieving the ticket statistics.' });
+			await ctx.sendErrorMessage('There was an error retrieving the ticket statistics.');
 		}
 	}
 }

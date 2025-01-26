@@ -20,8 +20,8 @@ export default class Ping extends Command {
 		});
 	}
 	async run(client: Bot, ctx: Context): Promise<void> {
-		const embed = this.client.embed().setDescription(`**Pong:** \`${Math.round(client.ws.ping)}ms\``);
-
-		await ctx.sendMessage({ embeds: [embed] });
+		await ctx.sendMessage({
+			embeds: [this.client.embed().setDescription(`**Pong:** \`${Math.round(client.ws.ping)}ms\``)],
+		});
 	}
 }

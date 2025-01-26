@@ -1,4 +1,11 @@
-import { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
+import {
+	ActionRowBuilder,
+	StringSelectMenuBuilder,
+	StringSelectMenuOptionBuilder,
+	MessageFlags,
+	TextChannel,
+	NewsChannel,
+} from 'discord.js';
 import { type Bot, Command, type Context } from '../../structures/index.js';
 import { TicketManager } from '../../utils/TicketManager.js';
 
@@ -34,31 +41,39 @@ export default class PanelCommand extends Command {
 			const panelEmbed = TicketManager.buildEmbed(config.embeds.panelEmbed);
 			const selectMenu = this.createSelectMenu(config.ticketCategories, config.menuPlaceholder);
 
-			await ctx.sendMessage({ content: 'Sending the panel in this channel...', ephemeral: true });
-			await ctx.channel.send({
-				embeds: [panelEmbed],
-				components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu)],
-			});
-			await this.client.db.saveTicketData(ctx.guild.id, selectMenu.options);
+			await ctx.sendMessage({ content: 'Sending the panel in this channel...', flags: MessageFlags.Ephemeral });
+
+			if (ctx.channel instanceof TextChannel || ctx.channel instanceof NewsChannel) {
+				await ctx.channel.send({
+					embeds: [panelEmbed],
+					components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu)],
+				});
+				await this.client.db.saveTicketData(
+					ctx.guild.id,
+					selectMenu.options.map(opt => opt.data),
+				);
+			} else {
+				await ctx.sendErrorMessage('This command can only be used in text-based channels.');
+			}
 		} catch (error) {
-			this.client.logger.error('Error sending the panel or saving ticket data:', error);
+			this.client.logger.error(`Error sending the panel or saving ticket data: ${error.message}`);
 		}
 	}
 
 	createSelectMenu(ticketCategories: Record<string, TicketCategory>, placeholder: string): StringSelectMenuBuilder {
-		const options = Object.entries(ticketCategories).map(([customId, category]) =>
-			new StringSelectMenuOptionBuilder()
-				.setLabel(category.menuLabel)
-				.setDescription(category.menuDescription)
-				.setValue(customId)
-				.setEmoji(category.menuEmoji || undefined),
-		);
-
 		return new StringSelectMenuBuilder()
 			.setCustomId('categoryMenu')
 			.setPlaceholder(placeholder)
 			.setMinValues(1)
 			.setMaxValues(1)
-			.addOptions(options);
+			.addOptions(
+				Object.entries(ticketCategories).map(([customId, category]) =>
+					new StringSelectMenuOptionBuilder()
+						.setLabel(category.menuLabel)
+						.setDescription(category.menuDescription)
+						.setValue(customId)
+						.setEmoji(category.menuEmoji || undefined),
+				),
+			);
 	}
 }

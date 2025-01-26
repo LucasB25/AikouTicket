@@ -1,23 +1,26 @@
 import type { Bot } from './index.js';
 import {
-	type APIInteractionGuildMember,
 	ChatInputCommandInteraction,
+	Message,
+	MessageFlags,
+	EmbedBuilder,
+	type APIInteractionGuildMember,
 	type CommandInteraction,
-	type DMChannel,
 	type Guild,
 	type GuildMember,
 	type GuildMemberResolvable,
-	type GuildTextBasedChannel,
 	type InteractionEditReplyOptions,
 	type InteractionReplyOptions,
-	Message,
 	type MessageCreateOptions,
 	type MessageEditOptions,
 	type MessagePayload,
+	type TextBasedChannel,
 	type PartialDMChannel,
+	type GuildTextBasedChannel,
+	type PartialGroupDMChannel,
+	type DMChannel,
 	type TextChannel,
 	type User,
-	ChannelType,
 } from 'discord.js';
 
 export default class Context {
@@ -28,8 +31,15 @@ export default class Context {
 	public channelId: string;
 	public client: Bot;
 	public author: User | null;
-	public channel: PartialDMChannel | GuildTextBasedChannel | TextChannel | DMChannel | null = null;
-	public guild: Guild | null;
+	public channel:
+		| TextBasedChannel
+		| PartialDMChannel
+		| GuildTextBasedChannel
+		| TextChannel
+		| DMChannel
+		| PartialGroupDMChannel
+		| null;
+	public guild: Guild;
 	public createdAt: Date;
 	public createdTimestamp: number;
 	public member: GuildMemberResolvable | GuildMember | APIInteractionGuildMember | null;
@@ -40,19 +50,16 @@ export default class Context {
 		this.ctx = ctx;
 		this.interaction = ctx instanceof ChatInputCommandInteraction ? ctx : null;
 		this.message = ctx instanceof Message ? ctx : null;
-		if (ctx.channel && ctx.channel.type !== ChannelType.GroupDM) {
-			this.channel = ctx.channel;
-		} else {
-			this.channel = null;
-		}
+		this.channel = ctx.channel!;
 		this.id = ctx.id;
 		this.channelId = ctx.channelId;
 		this.client = ctx.client as Bot;
 		this.author = ctx instanceof Message ? ctx.author : ctx.user;
-		this.guild = ctx.guild;
+		this.guild = ctx.guild!;
 		this.createdAt = ctx.createdAt;
 		this.createdTimestamp = ctx.createdTimestamp;
 		this.member = ctx.member;
+		this.args = args;
 		this.setArgs(args);
 	}
 
@@ -68,13 +75,41 @@ export default class Context {
 		content: string | MessagePayload | MessageCreateOptions | InteractionReplyOptions,
 	): Promise<Message> {
 		if (this.isInteraction) {
-			if (typeof content === 'string' || isInteractionReplyOptions(content)) {
-				this.msg = await this.interaction.reply(content);
-				return this.msg;
-			}
-		} else if (typeof content === 'string' || isMessagePayload(content)) {
-			this.msg = await (this.message.channel as TextChannel).send(content);
+			this.msg =
+				typeof content === 'string' || isInteractionReplyOptions(content)
+					? await this.interaction?.reply(content)
+					: this.msg;
 			return this.msg;
+		}
+		this.msg =
+			typeof content === 'string' || isMessagePayload(content)
+				? await (this.message?.channel as TextChannel).send(content)
+				: this.msg;
+		return this.msg;
+	}
+
+	public async sendErrorMessage(
+		description: string,
+		fields: { name: string; value: string; inline?: boolean }[] = [],
+	): Promise<Message> {
+		const embed = new EmbedBuilder().setColor('Red').setDescription(description).addFields(fields);
+		if (this.isInteraction) {
+			this.msg = await this.interaction?.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+			return this.msg;
+		}
+		this.msg = await (this.message?.channel as TextChannel).send({ embeds: [embed] });
+		return this.msg;
+	}
+
+	public async editErrorMessage(
+		description: string,
+		fields: { name: string; value: string; inline?: boolean }[] = [],
+	): Promise<Message> {
+		const embed = new EmbedBuilder().setColor('Red').setDescription(description).addFields(fields);
+		if (this.isInteraction && this.msg) {
+			this.msg = await this.interaction?.editReply({ content: null, embeds: [embed] });
+		} else if (this.msg) {
+			this.msg = await this.msg.edit({ content: null, embeds: [embed] });
 		}
 		return this.msg;
 	}
@@ -82,42 +117,33 @@ export default class Context {
 	public async editMessage(
 		content: string | MessagePayload | InteractionEditReplyOptions | MessageEditOptions,
 	): Promise<Message> {
-		if (this.isInteraction && this.msg) {
-			this.msg = await this.interaction.editReply(content);
-			return this.msg;
-		}
-		if (this.msg) {
-			this.msg = await this.msg.edit(content);
-			return this.msg;
-		}
+		this.msg =
+			this.isInteraction && this.msg
+				? await this.interaction?.editReply(content)
+				: this.msg
+					? await this.msg.edit(content)
+					: this.msg;
 		return this.msg;
 	}
 
 	public async sendDeferMessage(content: string | MessagePayload | MessageCreateOptions): Promise<Message> {
-		if (this.isInteraction) {
-			this.msg = await this.interaction.deferReply({ fetchReply: true });
-			return this.msg;
-		}
-
-		this.msg = await (this.message.channel as TextChannel).send(content);
+		this.msg = this.isInteraction
+			? await this.interaction?.deferReply({ withResponse: true })
+			: await (this.message?.channel as TextChannel).send(content);
 		return this.msg;
 	}
 
-	public async sendFollowUp(
-		content: string | MessagePayload | MessageCreateOptions | InteractionReplyOptions,
-	): Promise<void> {
-		if (this.isInteraction) {
-			if (typeof content === 'string' || isInteractionReplyOptions(content)) {
-				await this.interaction.followUp(content);
-			}
-		} else if (typeof content === 'string' || isMessagePayload(content)) {
-			this.msg = await (this.message.channel as TextChannel).send(content);
-		}
+	public get deferred(): boolean | undefined {
+		return this.isInteraction ? this.interaction?.deferred : !!this.msg;
 	}
 
-	public get deferred(): boolean | Promise<any> {
-		return this.isInteraction ? this.interaction.deferred : !!this.msg;
-	}
+	options = {
+		getRole: (name: string, required = true) => this.interaction?.options.get(name, required)?.role,
+		getMember: (name: string, required = true) => this.interaction?.options.get(name, required)?.member,
+		get: (name: string, required = true) => this.interaction?.options.get(name, required),
+		getChannel: (name: string, required = true) => this.interaction?.options.get(name, required)?.channel,
+		getSubCommand: () => this.interaction?.options.data[0].name,
+	};
 }
 
 function isInteractionReplyOptions(content: any): content is InteractionReplyOptions {
