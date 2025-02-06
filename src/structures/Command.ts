@@ -20,7 +20,7 @@ interface CommandOptions {
 	descriptionLocalizations?: Record<string, string>;
 	aliases?: string[];
 	cooldown?: number;
-	permissions?: CommandPermissions;
+	permissions?: Partial<CommandPermissions>;
 	options?: ApplicationCommandOption[];
 	category?: string;
 }
@@ -51,16 +51,20 @@ export default class Command {
 	constructor(client: Bot, options: CommandOptions) {
 		this.client = client;
 		this.name = options.name;
-		this.nameLocalizations = options.nameLocalizations || {};
-		this.description = options.description || defaultDescription;
-		this.descriptionLocalizations = options.descriptionLocalizations || null;
+		this.nameLocalizations = options.nameLocalizations ?? {};
+		this.description = options.description ?? defaultDescription;
+		this.descriptionLocalizations = options.descriptionLocalizations ?? null;
 		this.cooldown = options.cooldown ?? 3;
-		this.permissions = { ...defaultPermissions, ...options.permissions };
-		this.options = options.options || [];
-		this.category = options.category || 'general';
+		this.permissions = {
+			dev: options.permissions?.dev ?? defaultPermissions.dev,
+			client: options.permissions?.client ?? defaultPermissions.client,
+			user: options.permissions?.user ?? defaultPermissions.user,
+		};
+		this.options = options.options ?? [];
+		this.category = options.category ?? 'general';
 	}
 
-	public async run(_client: Bot, _message: any, _args: string[]): Promise<any> {
+	public async run(_client: Bot, _message: any, _args: string[]): Promise<void> {
 		return await Promise.resolve();
 	}
 }

@@ -3,13 +3,10 @@ import { type Bot, Event } from '../../structures/index.js';
 import { TicketManager } from '../../utils/TicketManager.js';
 
 export default class MessageCreate extends Event {
-	private intervalId: NodeJS.Timeout | null = null;
+	private intervalId?: NodeJS.Timeout;
 
 	constructor(client: Bot, file: string) {
-		super(client, file, {
-			name: 'messageCreate',
-		});
-
+		super(client, file, { name: 'messageCreate' });
 		this.startTicketActivityCheck();
 	}
 
@@ -20,16 +17,14 @@ export default class MessageCreate extends Event {
 			} catch (error) {
 				this.client.logger.error('Error checking ticket activity:', error);
 			}
-		}, 60000); // 1 minute interval
+		}, 60000);
 	}
 
 	public async run(message: Message): Promise<void> {
-		if (message.channel instanceof TextChannel) {
-			const ticketInfo = await this.client.db.getTicketInfo(message.channel.id);
-			if (ticketInfo) {
-				await this.client.db.updateActivity(message.channel.id);
-			}
-		}
+		if (!(message.channel instanceof TextChannel)) return;
+
+		const ticketInfo = await this.client.db.getTicketInfo(message.channel.id);
+		if (ticketInfo) await this.client.db.updateActivity(message.channel.id);
 	}
 
 	private async checkTicketActivity(): Promise<void> {
@@ -37,38 +32,30 @@ export default class MessageCreate extends Event {
 			await TicketManager.readConfigFile();
 		if (!enableTicketActivityCheck) return;
 
-		const tickets = await this.client.db.getAllTickets();
 		const now = BigInt(Date.now());
-		const intervalMilliseconds = BigInt(ticketActivityCheckInterval * 60 * 1000);
+		const intervalMs = BigInt(ticketActivityCheckInterval * 60000);
 
-		for (const ticket of tickets) {
+		for (const ticket of await this.client.db.getAllTickets()) {
 			const lastActivity = BigInt(ticket.activityAt);
 			const lastCheckTime = BigInt(ticket.lastCheckTime ?? 0);
 
-			if (now - lastActivity > intervalMilliseconds && now - lastCheckTime > intervalMilliseconds) {
-				const channel = this.client.channels.cache.get(ticket.channelId) as TextChannel;
-				if (channel) {
-					const ticketInfo = await this.client.db.getTicketInfo(channel.id);
-					if (!ticketInfo) continue;
+			if (now - lastActivity <= intervalMs || now - lastCheckTime <= intervalMs) continue;
 
-					const { creatorId } = ticketInfo;
-					const supportMentions = supportRoles.map(roleId => `<@&${roleId}>`).join(', ');
+			const channel = this.client.channels.cache.get(ticket.channelId) as TextChannel;
+			if (!channel || !(await this.client.db.getTicketInfo(channel.id))) continue;
 
-					await channel.send({
-						content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n<@${creatorId}>, ${supportMentions}`,
-					});
+			await channel.send({
+				content: `There has been no activity in this ticket for ${ticketActivityCheckInterval} minutes.\n<@${ticket.creatorId}>, ${supportRoles.map(r => `<@&${r}>`).join(', ')}`,
+			});
 
-					await this.client.db.updateActivity(channel.id);
-					await this.client.db.updateLastCheckTime(channel.id, now);
-				}
-			}
+			await Promise.all([
+				this.client.db.updateActivity(channel.id),
+				this.client.db.updateLastCheckTime(channel.id, now),
+			]);
 		}
 	}
 
 	public stopTicketActivityCheck(): void {
-		if (this.intervalId) {
-			clearInterval(this.intervalId);
-			this.intervalId = null;
-		}
+		if (this.intervalId) clearInterval(this.intervalId);
 	}
 }

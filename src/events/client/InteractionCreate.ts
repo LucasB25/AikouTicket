@@ -11,6 +11,7 @@ import {
 	StringSelectMenuBuilder,
 	type TextChannel,
 	type GuildChannel,
+	MessageFlags,
 } from 'discord.js';
 
 import { type Bot, Context, Event } from '../../structures/index.js';
@@ -41,7 +42,7 @@ export default class InteractionCreate extends Event {
 			this.client.logger.error(`Failed to handle interaction: ${error.message}`);
 			await interaction.reply({
 				content: `An error occurred: \`${error.message}\``,
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 		}
 	}
@@ -59,13 +60,13 @@ export default class InteractionCreate extends Event {
 			this.client.logger.error(error);
 			await interaction.reply({
 				content: `An error occurred: \`${error.message}\``,
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 		}
 	}
 
 	private async handleSelectMenuInteraction(interaction: any): Promise<void> {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
 		try {
 			const selectMenuOptions = await this.client.db.get(interaction.guild.id);
@@ -129,7 +130,7 @@ export default class InteractionCreate extends Event {
 		if (!isSupport) {
 			await interaction.reply({
 				content: 'You do not have permission to claim this ticket.',
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 			return;
 		}
@@ -146,7 +147,6 @@ export default class InteractionCreate extends Event {
 
 		await interaction.reply({
 			embeds: [embed],
-			ephemeral: false,
 		});
 
 		await this.updateClaimButton(interaction, interaction.user.username, 'claimed');
@@ -156,7 +156,7 @@ export default class InteractionCreate extends Event {
 		if (!isSupport) {
 			await interaction.reply({
 				content: 'You do not have permission to unclaim this ticket.',
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 			return;
 		}
@@ -168,7 +168,7 @@ export default class InteractionCreate extends Event {
 		if (this.config.closeTicketStaffOnly && !isSupport) {
 			await interaction.reply({
 				content: 'You do not have permission to close this ticket.',
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 			return;
 		}
@@ -196,7 +196,7 @@ export default class InteractionCreate extends Event {
 		await interaction.reply({
 			embeds: [embed],
 			components: [confirmationButtons],
-			ephemeral: true,
+			flags: MessageFlags.Ephemeral,
 		});
 
 		const filter = (i: MessageComponentInteraction): boolean => i.customId === 'confirm-close-ticket';
@@ -240,7 +240,7 @@ export default class InteractionCreate extends Event {
 		if (this.config.enableTicketReason) {
 			await interaction.reply({
 				content: 'Please provide a reason for closing the ticket within 1 minute.',
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 
 			let shouldCloseTicket = false;
@@ -282,14 +282,14 @@ export default class InteractionCreate extends Event {
 				if (!shouldCloseTicket) {
 					await interaction.followUp({
 						content: 'Failed to close the ticket. Reason not provided within 1 minute.',
-						ephemeral: true,
+						flags: MessageFlags.Ephemeral,
 					});
 					return;
 				}
 
 				const announcementEmbed = new EmbedBuilder().setDescription('This ticket will be closed in 10 seconds.');
 
-				await interaction.followUp({ embeds: [announcementEmbed], ephemeral: true });
+				await interaction.followUp({ embeds: [announcementEmbed], flags: MessageFlags.Ephemeral });
 
 				setTimeout(async () => {
 					try {
@@ -328,7 +328,7 @@ export default class InteractionCreate extends Event {
 
 			await interaction.reply({
 				embeds: [announcementEmbed],
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 
 			setTimeout(async () => {
@@ -423,7 +423,7 @@ export default class InteractionCreate extends Event {
 		if (Number.isNaN(rating) || rating < 1 || rating > 5) {
 			await interaction.reply({
 				content: 'Invalid rating. Please select a rating between 1 and 5 stars.',
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 			return;
 		}
@@ -443,13 +443,13 @@ export default class InteractionCreate extends Event {
 
 			await interaction.reply({
 				content: 'Thank you for rating your support ticket experience!',
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 		} catch (error) {
 			this.client.logger.error('Failed to save ticket rating:', error);
 			await interaction.reply({
 				content: `An error occurred: ${error.message}`,
-				ephemeral: true,
+				flags: MessageFlags.Ephemeral,
 			});
 		}
 	}
@@ -462,7 +462,7 @@ export default class InteractionCreate extends Event {
 
 		await interaction.reply({
 			embeds: [embed],
-			ephemeral: true,
+			flags: MessageFlags.Ephemeral,
 		});
 	}
 

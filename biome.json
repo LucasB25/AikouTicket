@@ -65,6 +65,7 @@
 			"complexity": {
 				"noForEach": "off",
 				"noExcessiveCognitiveComplexity": "off",
+				"useSimplifiedLogicExpression": "off",
 				"noUselessConstructor": "off",
 				"noBannedTypes": "off"
 			},
