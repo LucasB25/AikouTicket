@@ -64,7 +64,6 @@ or you can use the [.env.example](https://raw.githubusercontent.com/LucasB25/Aik
 ```bash
 TOKEN= #Discord Bot Token
 CLIENT_ID= #Discord Bot Client ID
-ACTIVITY=/help
 LOGSBOT= #ID of the channel where bot logs will be sent
 DATABASE_URL = "" # Your database url (If you want to use sqlite, then you can leave it blank.).
 ```
@@ -122,5 +121,5 @@ Thanks goes to these wonderful people :
 [issues-url]: https://github.com/LucasB25/AikouTicket/issues
 [license-shield]: https://img.shields.io/github/license/LucasB25/AikouTicket.svg?style=for-the-badge
 [license-url]: https://github.com/LucasB25/AikouTicket/blob/mains/LICENSE
-[support-server]: https://discord.gg/AhUJa2kdAr
+[support-server]: https://discord.gg/nvcznzhkTF
 [support-shield]: https://img.shields.io/discord/942117923001098260.svg?style=for-the-badge&logo=discord&colorB=7289DA

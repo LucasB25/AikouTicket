@@ -1,6 +1,6 @@
 import { type Message, TextChannel } from 'discord.js';
-import { type Bot, Event } from '../../structures/index.js';
-import { TicketManager } from '../../utils/TicketManager.js';
+import { type Bot, Event } from '../../structures/index';
+import { TicketManager } from '../../utils/TicketManager';
 
 export default class MessageCreate extends Event {
 	private intervalId?: NodeJS.Timeout;

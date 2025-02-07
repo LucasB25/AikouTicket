@@ -9,14 +9,14 @@ import {
 	type MessageComponentInteraction,
 	type SelectMenuInteraction,
 	StringSelectMenuBuilder,
+	type GuildMember,
 	type TextChannel,
 	type GuildChannel,
 	MessageFlags,
 } from 'discord.js';
-
-import { type Bot, Context, Event } from '../../structures/index.js';
-import { LogsManager } from '../../utils/LogsManager.js';
-import { TicketManager } from '../../utils/TicketManager.js';
+import { type Bot, Context, Event } from '../../structures/index';
+import { LogsManager } from '../../utils/LogsManager';
+import { TicketManager } from '../../utils/TicketManager';
 
 export default class InteractionCreate extends Event {
 	private config: any;
@@ -39,9 +39,9 @@ export default class InteractionCreate extends Event {
 				await this.handleRatingSelectMenu(interaction);
 			}
 		} catch (error) {
-			this.client.logger.error(`Failed to handle interaction: ${error.message}`);
+			this.client.logger.error(`Failed to handle interaction: ${error}`);
 			await interaction.reply({
-				content: `An error occurred: \`${error.message}\``,
+				content: `An error occurred: \`${error}\``,
 				flags: MessageFlags.Ephemeral,
 			});
 		}
@@ -59,7 +59,7 @@ export default class InteractionCreate extends Event {
 		} catch (error) {
 			this.client.logger.error(error);
 			await interaction.reply({
-				content: `An error occurred: \`${error.message}\``,
+				content: `An error occurred: \`${error}\``,
 				flags: MessageFlags.Ephemeral,
 			});
 		}
@@ -85,8 +85,8 @@ export default class InteractionCreate extends Event {
 				throw new Error('Selected category is not valid.');
 			}
 
-			const userTickets = interaction.guild.channels.cache.filter(
-				channel =>
+			const userTickets = interaction.guild!.channels.cache.filter(
+				(channel: TextChannel) =>
 					channel.type === ChannelType.GuildText && channel.name.startsWith(`ticket-${interaction.user.username}`),
 			);
 
@@ -199,27 +199,29 @@ export default class InteractionCreate extends Event {
 			flags: MessageFlags.Ephemeral,
 		});
 
-		const filter = (i: MessageComponentInteraction): boolean => i.customId === 'confirm-close-ticket';
-		const collector = interaction.channel.createMessageComponentCollector({
+		const filter = (interaction: MessageComponentInteraction): boolean =>
+			interaction.customId === 'confirm-close-ticket';
+		const collector = (interaction.channel as TextChannel).createMessageComponentCollector({
 			filter,
 			time: 60000,
 		});
 
-		collector.on('collect', async i => {
-			if (i.customId === 'confirm-close-ticket') {
+		collector.on('collect', async (interaction: ButtonInteraction<'cached'>) => {
+			if (interaction.customId === 'confirm-close-ticket') {
 				collector.stop();
 				// await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
 			}
 		});
 
-		const transcriptsFilter = (i: MessageComponentInteraction): boolean => i.customId === 'transcripts-ticket';
-		const transcriptsCollector = interaction.channel.createMessageComponentCollector({
+		const transcriptsFilter = (interaction: MessageComponentInteraction): boolean =>
+			interaction.customId === 'transcripts-ticket';
+		const transcriptsCollector = (interaction.channel as TextChannel).createMessageComponentCollector({
 			filter: transcriptsFilter,
 			time: 60000,
 		});
 
-		transcriptsCollector.on('collect', async i => {
-			if (i.customId === 'transcripts-ticket') {
+		transcriptsCollector.on('collect', async (interaction: ButtonInteraction<'cached'>) => {
+			if (interaction.customId === 'transcripts-ticket') {
 				transcriptsCollector.stop();
 				// await message.delete().catch((error) => this.client.logger.error("Failed to delete message:", error));
 			}
@@ -266,7 +268,7 @@ export default class InteractionCreate extends Event {
 
 				const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
 				if (ticket) {
-					const creator = interaction.guild.members.cache.find(member => member.user.username === ticket.creator);
+					const creator = interaction.guild!.members.cache.find(member => member.user.username === ticket.creator);
 					if (this.config.enableNotifyTicketCreator && creator) {
 						await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
 						await this.sendRatingMenu(creator, ticketChannel);
@@ -313,7 +315,7 @@ export default class InteractionCreate extends Event {
 			);
 			const ticket = await this.client.db.getTicketInfo(ticketChannel.id);
 			if (ticket) {
-				const creator = interaction.guild.members.cache.find(member => member.user.username === ticket.creator);
+				const creator = interaction.guild!.members.cache.find(member => member.user.username === ticket.creator);
 				if (this.config.enableNotifyTicketCreator && creator) {
 					await this.notifyTicketCreator(interaction, creator, reason, ticketChannel);
 					await this.sendRatingMenu(creator, ticketChannel);
@@ -355,7 +357,9 @@ export default class InteractionCreate extends Event {
 
 			const reasonText = reason ? `\n\n**Reason:** ${reason}` : '';
 			const { guild } = ticketChannel;
-			const creator = interaction.guild.members.cache.find(member => member.user.username === ticket.creator);
+			const creator = interaction.guild!.members.cache.find(
+				(member: GuildMember) => member.user.username === ticket.creator,
+			);
 			const creatorName = creator ? creator.user.username : ticket.creator;
 
 			const embed = new EmbedBuilder()
@@ -387,7 +391,7 @@ export default class InteractionCreate extends Event {
 
 			await user.send({ embeds: [embed] });
 		} catch (error) {
-			this.client.logger.error(`Failed to notify ticket creator: ${error.message}`);
+			this.client.logger.error(`Failed to notify ticket creator: ${error}`);
 		}
 	}
 
@@ -448,7 +452,7 @@ export default class InteractionCreate extends Event {
 		} catch (error) {
 			this.client.logger.error('Failed to save ticket rating:', error);
 			await interaction.reply({
-				content: `An error occurred: ${error.message}`,
+				content: `An error occurred: ${error}`,
 				flags: MessageFlags.Ephemeral,
 			});
 		}
@@ -495,7 +499,7 @@ export default class InteractionCreate extends Event {
 
 	private async updateClaimButton(interaction: any, userName: string, action: string): Promise<void> {
 		const components = interaction.message.components[0].components;
-		const claimButtonIndex = components.findIndex(component => component.customId === 'claim-ticket');
+		const claimButtonIndex = components.findIndex((component: any) => component.customId === 'claim-ticket');
 		const isClaimed = action === 'claimed';
 
 		if (claimButtonIndex !== -1) {
@@ -515,7 +519,7 @@ export default class InteractionCreate extends Event {
 
 				components.push(unclaimButton);
 			} else {
-				const unclaimButtonIndex = components.findIndex(component => component.customId === 'unclaim-ticket');
+				const unclaimButtonIndex = components.findIndex((component: any) => component.customId === 'unclaim-ticket');
 				if (unclaimButtonIndex !== -1) {
 					components.splice(unclaimButtonIndex, 1);
 				}

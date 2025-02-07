@@ -8,8 +8,8 @@ import {
 	type Snowflake,
 } from 'discord.js';
 import discordTranscripts from 'discord-html-transcripts';
-import type { Bot } from '../structures/index.js';
-import { TicketManager } from './TicketManager.js';
+import type { Bot } from '../structures/index';
+import { TicketManager } from './TicketManager';
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class LogsManager {

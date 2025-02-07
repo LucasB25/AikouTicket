@@ -1,4 +1,3 @@
-import type { Bot } from './index.js';
 import {
 	ChatInputCommandInteraction,
 	Message,
@@ -22,6 +21,7 @@ import {
 	type TextChannel,
 	type User,
 } from 'discord.js';
+import type { Bot } from './index';
 
 export default class Context {
 	public ctx: CommandInteraction | Message;

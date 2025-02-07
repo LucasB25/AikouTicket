@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { type Bot, Command, type Context } from '../../structures/index.js';
-import { TicketManager } from '../../utils/TicketManager.js';
+import { type Bot, Command, type Context } from '../../structures/index';
+import { TicketManager } from '../../utils/TicketManager';
 
 export default class ConfigStatus extends Command {
 	constructor(client: Bot) {

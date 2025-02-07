@@ -1,5 +1,5 @@
-import { type Bot, Event } from '../../structures/index.js';
 import { ActivityType } from 'discord.js';
+import { type Bot, Event } from '../../structures/index';
 
 export default class ClientReady extends Event {
 	constructor(client: Bot, file: string) {
@@ -9,7 +9,7 @@ export default class ClientReady extends Event {
 	public async run(): Promise<void> {
 		this.client.logger.info(`Connected to Discord as ${this.client.user?.tag}!`);
 
-		const activities = [`${this.client.config.activity} - by LucasB25`, 'Managing tickets'];
+		const activities = ['/help - by LucasB25', 'Managing tickets'];
 
 		const updateStatus = () => {
 			const activity = activities[Math.floor(Math.random() * activities.length)];

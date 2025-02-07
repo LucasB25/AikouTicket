@@ -1,5 +1,5 @@
-import { type Bot, Command, type Context } from '../../structures/index.js';
 import { EmbedBuilder } from 'discord.js';
+import { type Bot, Command, type Context } from '../../structures/index';
 
 export default class Stats extends Command {
 	constructor(client: Bot) {
@@ -45,7 +45,7 @@ export default class Stats extends Command {
 				],
 			});
 		} catch (error) {
-			this.client.logger.error(`Failed to retrieve ticket statistics: ${error.message}`);
+			this.client.logger.error(`Failed to retrieve ticket statistics: ${error}`);
 			await ctx.sendErrorMessage('There was an error retrieving the ticket statistics.');
 		}
 	}

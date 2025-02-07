@@ -1,4 +1,4 @@
-import { type Bot, Command, type Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from '../../structures/index';
 
 export default class Help extends Command {
 	constructor(client: Bot) {
@@ -42,7 +42,7 @@ export default class Help extends Command {
 			embeds: [
 				this.client
 					.embed()
-					.setAuthor({ name: this.client.user?.username })
+					.setAuthor({ name: this.client.user?.username! })
 					.setTitle('Help - List of Commands')
 					.setDescription(commandList)
 					.setTimestamp(),

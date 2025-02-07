@@ -1,4 +1,3 @@
-import type { Bot } from '../structures/index.js';
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -13,7 +12,8 @@ import {
 } from 'discord.js';
 import { promises as fs } from 'node:fs';
 import YAML from 'yaml';
-import { LogsManager } from './LogsManager.js';
+import type { Bot } from '../structures/index';
+import { LogsManager } from './LogsManager';
 
 interface Config {
 	supportRoles: Snowflake[];
@@ -104,7 +104,7 @@ export class TicketManager {
 
 			return channel;
 		} catch (error) {
-			client.logger.error(`Failed to create ticket: ${error.message}`);
+			client.logger.error(`Failed to create ticket: ${error}`);
 			return null;
 		}
 	}
@@ -116,13 +116,13 @@ export class TicketManager {
 		supportRoles: Snowflake[],
 		ticketCategoryId: Snowflake,
 	): Promise<TextChannel> {
-		const channel = await interaction.guild.channels.create({
+		const channel = await interaction.guild!.channels.create({
 			name: `${menuLabel}-${userName}`,
 			type: ChannelType.GuildText,
 			topic: `Ticket Creator: ${userName} | Ticket Type: ${menuLabel}`,
 			parent: ticketCategoryId,
 			permissionOverwrites: [
-				{ id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+				{ id: interaction.guild!.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
 				{
 					id: interaction.user.id,
 					allow: [
@@ -213,7 +213,7 @@ export class TicketManager {
 		try {
 			return YAML.parse(await fs.readFile('./config.yml', 'utf8')) as Config;
 		} catch (error) {
-			throw new Error(`Failed to read config file: ${error.message}`);
+			throw new Error(`Failed to read config file: ${error}`);
 		}
 	}
 }

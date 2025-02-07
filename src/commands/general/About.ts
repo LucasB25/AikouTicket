@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { type Bot, Command, type Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from '../../structures/index';
 
 export default class About extends Command {
 	constructor(client: Bot) {

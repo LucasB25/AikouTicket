@@ -6,8 +6,8 @@ import {
 	TextChannel,
 	NewsChannel,
 } from 'discord.js';
-import { type Bot, Command, type Context } from '../../structures/index.js';
-import { TicketManager } from '../../utils/TicketManager.js';
+import { type Bot, Command, type Context } from '../../structures/index';
+import { TicketManager } from '../../utils/TicketManager';
 
 interface TicketCategory {
 	menuLabel: string;
@@ -56,7 +56,7 @@ export default class PanelCommand extends Command {
 				await ctx.sendErrorMessage('This command can only be used in text-based channels.');
 			}
 		} catch (error) {
-			this.client.logger.error(`Error sending the panel or saving ticket data: ${error.message}`);
+			this.client.logger.error(`Error sending the panel or saving ticket data: ${error}`);
 		}
 	}
 
@@ -67,13 +67,16 @@ export default class PanelCommand extends Command {
 			.setMinValues(1)
 			.setMaxValues(1)
 			.addOptions(
-				Object.entries(ticketCategories).map(([customId, category]) =>
-					new StringSelectMenuOptionBuilder()
+				Object.entries(ticketCategories).map(([customId, category]) => {
+					const option = new StringSelectMenuOptionBuilder()
 						.setLabel(category.menuLabel)
 						.setDescription(category.menuDescription)
-						.setValue(customId)
-						.setEmoji(category.menuEmoji || undefined),
-				),
+						.setValue(customId);
+
+					if (category.menuEmoji) option.setEmoji(category.menuEmoji);
+
+					return option;
+				}),
 			);
 	}
 }

@@ -1,4 +1,4 @@
-import { type Bot, Command, type Context } from '../../structures/index.js';
+import { type Bot, Command, type Context } from '../../structures/index';
 
 export default class Invite extends Command {
 	constructor(client: Bot) {

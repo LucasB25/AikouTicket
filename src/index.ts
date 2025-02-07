@@ -1,6 +1,6 @@
 import { Partials, type TextChannel } from 'discord.js';
-import config from './config.js';
-import Bot from './structures/Client.js';
+import Bot from './structures/Client';
+import { env } from './env';
 
 const client = new Bot({
 	intents: 131059,
@@ -17,11 +17,11 @@ const client = new Bot({
 
 const sendErrorLog = async (client: Bot, error: Error, type: string): Promise<void> => {
 	try {
-		const logChannel = client.channels.cache.get(config.logsbot) as TextChannel;
+		const logChannel = client.channels.cache.get(env.LOGSBOT) as TextChannel;
 		if (logChannel) {
 			await logChannel.send(`**[${type}]** ${error.name}: ${error.message}\n\`\`\`${error.stack}\`\`\``);
 		} else {
-			client.logger.error(`Log channel not found: ${config.logsbot}`);
+			client.logger.error(`Log channel not found: ${env.LOGSBOT}`);
 		}
 	} catch (err) {
 		client.logger.error('Failed to send log message:', err);
@@ -46,4 +46,4 @@ process.on('warning', warning => {
 
 process.once('exit', () => client.logger.warn('Process exited!'));
 
-client.start(config.token);
+client.start(env.TOKEN);
